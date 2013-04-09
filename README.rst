@@ -3,6 +3,11 @@ wbpy
 
 Python wrapper for the various World Bank APIs. 
 
+.. _readthedocs: http://wbpy.readthedocs.org/en/latest
+
+Read the docs in all their Sphinx-y glory at readthedocs_.
+
+
 Why use wbpy?
 =============
 
