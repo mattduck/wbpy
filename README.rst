@@ -161,5 +161,5 @@ when instantiating an ``Indicators`` object::
 
     >>> wb = wbpy.Indicators(cache=my_cache_func)
 
-You can also point ``wb.cache`` to your function. The given function must 
+You can also point ``wb.fetch`` to your function. The given function must 
 take a url, and return the web page as a string.
