@@ -80,6 +80,25 @@ class TestIndicators(unittest.TestCase):
         wb.print_codes(info)
         assert True
 
+class TestClimate(unittest.TestCase):
+    def test_get_precip_instrumental(self):
+        # Test can use multiple locations.
+        # Test ISO codes are upper case.
+        # Test result in expected dict format 
+        c = wbpy.Climate()
+        data = c.get_precip_instrumental(locations=['bra', 'chn'], interval='year')
+        self.assertTrue(data['BRA'].has_key(1990))
+        self.assertTrue(data['CHN'].has_key(1975))
+
+    def test_get_temp_instrumental(self):
+        # Test month keys get converted to 1-12, instead of 0-11
+        # Test basin id numbers work 
+        c = wbpy.Climate()
+        data = c.get_temp_instrumental(locations=['gbr', 2], interval='month')
+        self.assertTrue(data['GBR'].has_key(12))
+        self.assertTrue(data[2].has_key(1))
+
+
 if __name__ == '__main__':
     unittest.main()
 

@@ -355,3 +355,48 @@ class Indicators(object):
         if match:
             tidier_data = self.match_data(match, tidier_data)
         return tidier_data
+
+class Climate(object):
+    def __init__(self, cache=_fetch):
+        self.fetch = cache
+        self.base_url = "http://climatedataapi.worldbank.org/climateweb/rest/"
+
+    def get_precip_instrumental(self, locations, interval="year"):
+        return self._get_instrumental(var="pr", locations=locations,
+                interval=interval)
+
+    def get_temp_instrumental(self, locations, interval="year"):
+        return self._get_instrumental(var="tas", locations=locations,
+                interval=interval)
+
+    def _get_instrumental(self, var, locations, interval="year"):
+        # URL structures are different for countries and basins.
+        urls = []
+        for loc in locations:
+            try:
+                int(loc)
+                basins_url = "v1/basin/cru/{0}/{1}/".format(var, interval)
+                full_url = "".join([self.base_url, basins_url, str(loc), 
+                            ".json"])
+                urls.append((loc, full_url))
+            except ValueError:
+                countries_url = "v1/country/cru/{0}/{1}/".format(var, interval)
+                full_url = "".join([self.base_url, countries_url, loc, 
+                            ".json"])
+                urls.append((loc, full_url))
+
+        results = {}
+        for loc, url in urls:
+            if hasattr(loc, 'upper'):
+                loc = loc.upper()
+            response = json.loads(self.fetch(url))
+            results[loc] = {}
+            for data in response:
+                # The response has different keys depending on the interval
+                if interval == 'month':
+                    # + 1 to month as it uses keys 0-11, unless I missing some
+                    # domain-related reason I think 1-12 more sensible.
+                    results[loc][data['month'] + 1] = data['data']
+                else:
+                    results[loc][data['year']] = data['data']
+        return results
