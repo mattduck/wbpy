@@ -13,8 +13,6 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-BASE_URL = "http://api.worldbank.org/"
-
 def _fetch(url):
     """ Temp file cache, keeps pages for a day. """
     one_day_old = 60*60*24
@@ -46,6 +44,7 @@ class Indicators(object):
         and returns a web page as a string.
         """
         self.fetch = cache
+        self.base_url = "http://api.worldbank.org/"
 
     # ========== PUBLIC METHODS =========
 
@@ -314,7 +313,7 @@ class Indicators(object):
             options.append("{0}={1}".format(k, v))
 
         query_string = '&'.join(options)
-        new_url = "".join([BASE_URL, rest_url, query_string])
+        new_url = "".join([self.base_url, rest_url, query_string])
         return new_url
 
     def _get_api_response_as_json(self, url):
