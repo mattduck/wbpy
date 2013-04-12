@@ -98,6 +98,45 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(data['GBR'].has_key(12))
         self.assertTrue(data[2].has_key(1))
 
+    def test_get_precip_modelled_ensemble_has_right_gcm_keys(self):
+        c = wbpy.Climate()
+        data = c.get_precip_modelled(data_type='aavg', locations=['usa'],
+                            gcm='ensemble')
+        self.assertTrue(all([k[0] == 'ensemble' for k in data.keys()]))
+
+    def test_get_precip_modelled_mavg(self):
+        # General results layout - keys etc
+        c = wbpy.Climate()
+        data = c.get_precip_modelled(data_type='mavg', locations=['bra'])
+        self.assertTrue(data['mpi_echam5']['BRA'][1920].has_key(12))
+
+    def test_get_temp_modelled_aanom(self):
+        # Test sres filter works
+        # Test can pass 'aanom' as data type
+        c = wbpy.Climate()
+        data = c.get_temp_modelled(data_type='aanom', locations=['USA', 'AUS'], 
+                sres='A2')
+        sres = []
+        for country_data in data['gfdl_cm2_1'].values():
+            for year_key in country_data.keys():
+                try:
+                    sres.append('a2' in year_key[1])
+                except TypeError:
+                    pass # Not all keys are tuples
+        self.assertTrue(all(sres)) # All future keys should be a2 scenario.
+
+    def test_get_temp_modelled_gcm_filter(self):
+        c = wbpy.Climate()
+        gcms = ['cnrm_cm3', 'ukmo_hadcm3']
+        data = c.get_temp_modelled(data_type='mavg', locations=['gbr'],
+                gcm=gcms)
+        self.assertTrue(all([k in gcms for k in data.keys()]))
+
+    def test_get_derived_stat(self):
+        c = wbpy.Climate()
+        data = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
+                locations=['gbr', 'jpn'])
+        self.assertTrue(data[('ensemble', 10)]['JPN'].has_key((2046, 'b1')))
 
 if __name__ == '__main__':
     unittest.main()

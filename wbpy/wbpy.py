@@ -369,20 +369,38 @@ class Climate(object):
         return self._get_instrumental(var="tas", locations=locations,
                 interval=interval)
 
+    def get_precip_modelled(self, data_type, locations, gcm=None,
+        sres=None, ensemble_percentile=None):
+        return self._get_modelled(var="pr", data_type=data_type,
+                locations=locations, gcm=gcm, sres=sres,
+                ensemble_percentile=None)
+
+    def get_temp_modelled(self, data_type, locations, gcm=None,
+        sres=None, ensemble_percentile=None):
+        return self._get_modelled(var="tas", data_type=data_type,
+                locations=locations, gcm=gcm, sres=sres,
+                ensemble_percentile=None)
+
+    def get_derived_stat(self, data_type, stat, locations, sres=None, 
+            ensemble_percentile=None):
+        return self._get_modelled(var=stat, data_type=data_type,
+                locations=locations, sres=sres, 
+                ensemble_percentile=ensemble_percentile, gcm='ensemble')
+
     def _get_instrumental(self, var, locations, interval="year"):
         # URL structures are different for countries and basins.
         urls = []
         for loc in locations:
             try:
                 int(loc)
-                basins_url = "v1/basin/cru/{0}/{1}/".format(var, interval)
-                full_url = "".join([self.base_url, basins_url, str(loc), 
-                            ".json"])
+                basins_url = "v1/basin/cru/{0}/{1}/{2}".format(var, interval,
+                                str(loc))
+                full_url = "".join([self.base_url, basins_url, ".json"])
                 urls.append((loc, full_url))
             except ValueError:
-                countries_url = "v1/country/cru/{0}/{1}/".format(var, interval)
-                full_url = "".join([self.base_url, countries_url, loc, 
-                            ".json"])
+                countries_url = "v1/country/cru/{0}/{1}/{2}".format(var, interval,
+                                loc)
+                full_url = "".join([self.base_url, countries_url, ".json"])
                 urls.append((loc, full_url))
 
         results = {}
@@ -400,3 +418,198 @@ class Climate(object):
                 else:
                     results[loc][data['year']] = data['data']
         return results
+
+    def _get_modelled(self, var, data_type, locations, gcm=None,
+        sres=None, ensemble_percentile=None):
+        """ Single point of interaction, returns either an 
+        ensemble or gcm call, as they have different url and response
+        structures.
+        """
+        # You can input 'aavg', 'aanom', to go w/'mavg', 'manom'.
+        # The actual API code is 'annualavg', etc.
+        if data_type.startswith('a'):
+            data_type = data_type.replace('a', 'annual', 1) 
+        try:
+            gcm = gcm.lower()
+        except AttributeError:
+            pass
+
+        if gcm == 'ensemble':
+            return self._get_modelled_ensemble(var=var, data_type=data_type,
+                    locations=locations, sres=sres,
+                    ensemble_percentile=ensemble_percentile)
+        else:
+            return self._get_modelled_gcm(var=var, data_type=data_type,
+                    locations=locations, sres=sres,
+                    gcm=gcm)
+
+    def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
+        sres=None):
+        """
+        :gcm:       list, or 'ensemble'
+        :sres:      str
+        :returns:   Dict with one of the following layouts:
+                        GCM id > location id > year or (year, sres) > value.
+                        GCM id > location id > year or (year, sres) > month >
+                            value.
+        """
+        valid_dates = ( # API allows fixed 19-yr date ranges
+                1920, 1940, 1960, 1980,
+                2020, 2040, 2060, 2080,
+                )
+        date_range = 19
+
+        # Construct the requested urls
+        urls = []
+        for start_date in valid_dates:
+            end_date = start_date + date_range
+            for loc in locations:
+                try:
+                    int(loc) # basin ids are ints
+                    loc_type = 'basin'
+                except ValueError:
+                    loc_type = 'country'
+                rest_url = "v1/{0}/{1}/{2}/{3}/{4}/{5}".format(
+                        loc_type, data_type,
+                        var, start_date, end_date, loc)
+                full_url = "".join([self.base_url, rest_url, ".json"])
+                urls.append((loc, full_url))
+
+        # Get responses and tidy results
+        results = {}
+        info = {}
+        for loc, url in urls:
+            if hasattr(loc, 'upper'):
+                loc = loc.upper()
+            response = json.loads(self.fetch(url))
+            for data in response:
+                # L1 - GCM
+                if data.has_key('gcm'):
+                    gcm_key = data['gcm']
+                if gcm_key not in results:
+                    results[gcm_key] = {}
+
+                # L2 - Location
+                if loc not in results[gcm_key]:
+                    results[gcm_key][loc] = {}
+
+                # L3 - year / scenario
+                time = data['fromYear']
+                if data.has_key('scenario'):
+                    time = (time, data['scenario'])
+                if time not in results[gcm_key][loc]:
+                    results[gcm_key][loc][time] = {}
+
+                # L4 - values / months, depending on the result
+                if data.has_key('monthVals'):
+                    for i, val in enumerate(data['monthVals'], 1):
+                        results[gcm_key][loc][time][i] = val
+                elif data.has_key('annualVal'):
+                    results[gcm_key][loc][time] = data['annualVal'][0]
+
+        # Filter unwanted 
+        if gcm:
+            res_keys = results.keys()
+            for k in res_keys:
+                if k not in gcm:
+                    del(results[k])
+        if sres:
+            for gcm_key in results:
+                for loc in results[gcm_key]:
+                    time_keys = results[gcm_key][loc].keys()
+                    for k in time_keys:
+                        if sres:
+                            try: 
+                                if k[1].lower() != sres.lower():
+                                    del(results[gcm_key][loc][k])
+                            except TypeError: 
+                                # (Time only subscriptable if a tuple, ie.
+                                # a future value with a sres)
+                                pass
+
+        return results
+
+    def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
+            ensemble_percentile=None):
+
+        if var not in ['pr', 'tas']:
+            # Then assume it's a stat. Stat directly replaces the var API arg.
+            # Only 2 or 3 date periods for future derived stats
+            valid_dates = (1961, 2046, 2081) 
+        else:
+            valid_dates = ( 
+                    1920, 1940, 1960, 1980,
+                    2020, 2040, 2060, 2080,
+                    )
+        date_range = 19
+
+        # Construct the requested urls
+        urls = []
+        for start_date in valid_dates:
+            end_date = start_date + date_range
+            # One exception - this range can be used for manom and aanom stats:
+            if start_date == 1961:
+                end_date = 2000 
+            for loc in locations:
+                try:
+                    int(loc) # basin ids are ints
+                    loc_type = 'basin'
+                except ValueError:
+                    loc_type = 'country'
+                rest_url = "v1/{0}/{1}/ensemble/{2}/{3}/{4}/{5}".format(
+                        loc_type, data_type, var, start_date, end_date, loc)
+                full_url = "".join([self.base_url, rest_url, ".json"])
+                urls.append((loc, full_url))
+
+        # Get responses and tidy results
+        results = {}
+        info = {}
+        for loc, url in urls:
+            if hasattr(loc, 'upper'):
+                loc = loc.upper()
+            response = json.loads(self.fetch(url))
+            for data in response:
+                # L1 - percentile
+                gcm_key = ('ensemble', data['percentile'])
+                if gcm_key not in results:
+                    results[gcm_key] = {}
+                # L2 - Location
+                if loc not in results[gcm_key]:
+                    results[gcm_key][loc] = {}
+                # L3 - year / scenario
+                time = data['fromYear']
+                if data.has_key('scenario'):
+                    time = (time, data['scenario'])
+                if time not in results[gcm_key][loc]:
+                    results[gcm_key][loc][time] = {}
+                # L4 - values / months, depending on the result
+                if data.has_key('monthVals'):
+                    for i, val in enumerate(data['monthVals'], 1):
+                        results[gcm_key][loc][time][i] = val
+                elif data.has_key('annualVal'):
+                    results[gcm_key][loc][time] = data['annualVal'][0]
+
+        # If sres or ensemble_percentile values given, filter out unwanted
+        # results. Best to get data in small no. of calls and to take out
+        # unwanted, than to make a call for every percentile/GCM/SRES
+        # variation.
+        if ensemble_percentile:
+            res_keys = results.keys()
+            for k in res_keys:
+                if str(k[0]) not in [str(x) for x in ensemble_percentiles]:
+                    del(results[k])
+        if sres:
+            for gcm_key in results:
+                for loc in results[gcm_key]:
+                    time_keys = results[gcm_key][loc].keys()
+                    for k in time_keys:
+                        if sres:
+                            try: 
+                                if k[1].lower() != sres.lower():
+                                    del(results[gcm_key][loc][k])
+                            except TypeError: 
+                                # (Time only subscriptable if a tuple, ie.
+                                # a future value with a sres)
+                                pass
+        return results
+
