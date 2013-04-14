@@ -11,6 +11,8 @@ try:
 except ImportError: 
     import json 
 
+import pycountry # For iso code conversions
+
 logger = logging.getLogger(__name__)
 
 def _fetch(url):
@@ -35,6 +37,27 @@ def _fetch(url):
     os.rename(tempname, cache_path)
     logger.debug("%s saved to cache." % url)
     return web_page
+
+def _convert_to_alpha2(code):
+    # Convert code if it ISO one, else return
+    try:
+        code = code.upper()
+        if len(code) == 2:
+            return pycountry.countries.get(alpha2=code).alpha2
+        if len(code) == 3:
+            return pycountry.countries.get(alpha3=code).alpha2
+    except (KeyError, AttributeError):
+        return code
+
+def _convert_to_alpha3(code):
+    try:
+        code = code.upper()
+        if len(code) == 2:
+            return pycountry.countries.get(alpha2=code).alpha3
+        if len(code) == 3:
+            return pycountry.countries.get(alpha3=code).alpha3
+    except (KeyError, AttributeError):
+        return code
 
 class Indicators(object):
     def __init__(self, cache=_fetch):
@@ -66,6 +89,7 @@ class Indicators(object):
         # Generate urls and concatenate multiple calls into one list.
         response_data = []
         if country_codes:
+            country_codes = [_convert_to_alpha3(code) for code in country_codes]
             country_string = ";".join(country_codes)
         else:
             country_string = "all"
@@ -143,6 +167,8 @@ class Indicators(object):
 
         :returns:   Dict of countries using 2-letter ISO codes as keys.
         """
+        if country_codes:
+            country_codes = [_covert_to_alpha3(code) for code in country_codes]
         return self._get_indicator_data(country_codes, rest_url="country",
                 match=match, response_key="iso2Code", **kwargs)
 
@@ -398,6 +424,7 @@ class Climate(object):
                 full_url = "".join([self.base_url, basins_url, ".json"])
                 urls.append((loc, full_url))
             except ValueError:
+                loc = _convert_to_alpha3(loc)
                 countries_url = "v1/country/cru/{0}/{1}/{2}".format(var, interval,
                                 loc)
                 full_url = "".join([self.base_url, countries_url, ".json"])
@@ -405,8 +432,7 @@ class Climate(object):
 
         results = {}
         for loc, url in urls:
-            if hasattr(loc, 'upper'):
-                loc = loc.upper()
+            loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
             results[loc] = {}
             for data in response:
@@ -425,7 +451,7 @@ class Climate(object):
         ensemble or gcm call, as they have different url and response
         structures.
         """
-        # You can input 'aavg', 'aanom', to go w/'mavg', 'manom'.
+        # You can input 'aavg', 'aanom', to go w/ the proper 'mavg', 'manom'.
         # The actual API code is 'annualavg', etc.
         if data_type.startswith('a'):
             data_type = data_type.replace('a', 'annual', 1) 
@@ -433,6 +459,8 @@ class Climate(object):
             gcm = gcm.lower()
         except AttributeError:
             pass
+
+        locations = [_convert_to_alpha3(code) for code in locations]
 
         if gcm == 'ensemble':
             return self._get_modelled_ensemble(var=var, data_type=data_type,
@@ -479,8 +507,7 @@ class Climate(object):
         results = {}
         info = {}
         for loc, url in urls:
-            if hasattr(loc, 'upper'):
-                loc = loc.upper()
+            loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
             for data in response:
                 # L1 - GCM
@@ -565,8 +592,7 @@ class Climate(object):
         results = {}
         info = {}
         for loc, url in urls:
-            if hasattr(loc, 'upper'):
-                loc = loc.upper()
+            loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
             for data in response:
                 # L1 - percentile

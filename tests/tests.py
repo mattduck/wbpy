@@ -87,15 +87,15 @@ class TestClimate(unittest.TestCase):
         # Test result in expected dict format 
         c = wbpy.Climate()
         data = c.get_precip_instrumental(locations=['bra', 'chn'], interval='year')
-        self.assertTrue(data['BRA'].has_key(1990))
-        self.assertTrue(data['CHN'].has_key(1975))
+        self.assertTrue(data['BR'].has_key(1990))
+        self.assertTrue(data['CN'].has_key(1975))
 
     def test_get_temp_instrumental(self):
         # Test month keys get converted to 1-12, instead of 0-11
         # Test basin id numbers work 
         c = wbpy.Climate()
         data = c.get_temp_instrumental(locations=['gbr', 2], interval='month')
-        self.assertTrue(data['GBR'].has_key(12))
+        self.assertTrue(data['GB'].has_key(12))
         self.assertTrue(data[2].has_key(1))
 
     def test_get_precip_modelled_ensemble_has_right_gcm_keys(self):
@@ -108,7 +108,7 @@ class TestClimate(unittest.TestCase):
         # General results layout - keys etc
         c = wbpy.Climate()
         data = c.get_precip_modelled(data_type='mavg', locations=['bra'])
-        self.assertTrue(data['mpi_echam5']['BRA'][1920].has_key(12))
+        self.assertTrue(data['mpi_echam5']['BR'][1920].has_key(12))
 
     def test_get_temp_modelled_aanom(self):
         # Test sres filter works
@@ -133,10 +133,11 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(all([k in gcms for k in data.keys()]))
 
     def test_get_derived_stat(self):
+        # Test can pass alpha2 codes
         c = wbpy.Climate()
         data = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
-                locations=['gbr', 'jpn'])
-        self.assertTrue(data[('ensemble', 10)]['JPN'].has_key((2046, 'b1')))
+                locations=['gb', 'JP'])
+        self.assertTrue(data[('ensemble', 10)]['JP'].has_key((2046, 'b1')))
 
 if __name__ == '__main__':
     unittest.main()

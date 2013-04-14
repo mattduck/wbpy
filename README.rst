@@ -3,16 +3,14 @@ wbpy
 
 Python wrapper for the various World Bank APIs. 
 
-.. _readthedocs: http://wbpy.readthedocs.org/en/latest
-
-Read the docs in all their Sphinx-y glory at readthedocs_.
-
+Full docs:  http://wbpy.readthedocs.org/en/latest
+Source:     http://github.com/mattduck/wbpy 
 
 Why use wbpy?
 =============
 
-- Single point of access to multiple APIs - Indicators, 
-  (`pending: Finances, Projects, Climate Data`).
+- Single point of access to multiple APIs - Indicators, Climate Data,
+  (`pending: Finances, Projects`).
 - Easy access to the data, with all the usual API duplicate info removed
   (see below).
 - Built-in search and pretty-printing for API codes.
@@ -163,3 +161,10 @@ when instantiating an ``Indicators`` object::
 
 You can also point ``wb.cache`` to your function. The given function must 
 take a url, and return the web page as a string.
+
+Misc
+====
+
+- Regarding country codes, wbpy supports ISO 3166 alpha-2 codes. The actual API
+  mostly uses alpha-3 codes. Alpha-3 codes may work with some wbpy calls, 
+  but this isn't guaranteed. 
