@@ -381,6 +381,83 @@ class Climate(object):
     def __init__(self, cache=_fetch):
         self.fetch = cache
         self.base_url = "http://climatedataapi.worldbank.org/climateweb/rest/"
+        self.valid_modelled_dates = (
+            (1920, 1939),
+            (1940, 1959),
+            (1960, 1979),
+            (1980, 1999),
+            (2020, 2039),
+            (2040, 2059),
+            (2060, 2079),
+            (2080, 2099),
+            )
+        self.valid_stat_dates = (
+            (1961, 2000),
+            (2046, 2065),
+            (2081, 2100),
+            )
+        self.definitions = dict(
+            type=dict(
+                mavg="Monthly average",
+                aavg="Annual average",
+                manom="Average monthly change (anomaly)",
+                aanom="Average annual change (anomaly)",
+                ),
+            stat=dict(
+                tmin_means="Average daily minimum temperature, Celsius",
+                tmax_means="Average daily maximum temperature, Celsius",
+                tmax_days90th="Number of days with max temperature above the "\
+                              "control period's 90th percentile (hot days)",
+                tmin_days90th="Number of days with min temperature above the "\
+                              "control period's 90th percentile (warm nights)",
+                tmax_days10th="Number of days with max temperature below the "\
+                              "control period's 10th percentile (cool days)",
+                tmin_days10th="Number of days with min temperature below the "\
+                              "control period's 10th percentile (cold nights)",
+                tmin_days0="Number of days with min temperature below "\
+                           "0 degrees Celsius",
+                ppt_days="Number of days with precipitation > 0.2mm",
+                ppt_days2="Number of days with precipitation > 2mm",
+                ppt_days10="Number of days with precipitation > 10mm",
+                ppt_days90th="Number of days with precipitation > the control "\
+                             "period's 90th percentile",
+                ppt_dryspell="Average number of days between precipitation "\
+                             "events",
+                ppt_means="Average daily precipitation",
+                ),
+            gcm=dict(
+                bccr_bcm2_0="BCM 2.0",
+                csiro_mk3_5="CSIRO Mark 3.5",
+                ingv_echam4="ECHAM 4.6",
+                cccma_cgcm3_1="CGCM 3.1 (T47)",
+                cnrm_cm3="CNRM CM3",
+                gfdl_cm2_0="GFDL CM2.0",
+                gfdl_cm2_1="GFDL CM2.1",
+                ipsl_cm4="IPSL-CM4",
+                microc3_2_medres="MIROC 3.2 (medres)",
+                miub_echo_g="ECHO-G",
+                mpi_echam5="ECHAM5/MPI-OM",
+                mri_cgcm2_3_2a="MRI-CGCM2.3.2",
+                inmcm3_0="INMCM3.0",
+                ukmo_hadcm3="UKMO HadCM3",
+                ukmo_hadgem1="UKMO HadGEM3",
+                ensemble="x Percentile values of all models together,  "\
+                         "for both A2 and B1 scenarios",
+                ),
+            sres=dict(
+                a2="A2 Scenario",
+                b1="B1 Scenario",
+                ),
+            )
+        self._definitions=dict(
+            # Definitions that I want to show, but with different codes to the
+            # Climate API.
+            pr="Precipitation (rainfall and assumed water equvialent) in "\
+               "millimeters",
+            tas="Temperature, in degrees Celsisus",
+            annualavg=self.definitions['type']['aavg'],
+            annualanom=self.definitions['type']['aanom'],
+            )
 
     def get_precip_instrumental(self, locations, interval="year"):
         return self._get_instrumental(var="pr", locations=locations,
@@ -438,7 +515,10 @@ class Climate(object):
                     results[loc][data['month'] + 1] = data['data']
                 else:
                     results[loc][data['year']] = data['data']
-        return results
+        info = {}
+        info['stat'] = self._definitions[var] # pr or tas
+        info['interval'] = interval
+        return results, info
 
     def _get_modelled(self, var, data_type, locations, gcm=None,
         sres=None, ensemble_percentile=None):
@@ -457,14 +537,42 @@ class Climate(object):
 
         locations = [_convert_to_alpha3(code) for code in locations]
 
+        # Info dict can be arranged from input
+        info = {}
+        info['gcm'] = {}
+        try:
+            # gcm might be 'ensemble'
+            info['gcm'][gcm.lower()] = self.definitions['gcm'][gcm.lower()]
+        except AttributeError:
+            try:
+                # Or it might be a list of models
+                for model in gcm: 
+                    info['gcm'][model] = self.definitions['gcm'][model.lower()]
+            except TypeError:
+                # Or it could be None
+                info['gcm'] = self.definitions['gcm']
+                del(info['gcm']['ensemble'])
+        if sres:
+            info['sres'] = self.definitions['sres'][sres.lower()]
+        else:
+            info['sres'] = self.definitions['sres']
+        try:
+            info['stat'] = self.definitions['stat'][var.lower()]
+        except KeyError:
+            info['stat'] = self._definitions[var] # pr or tas
+        try:
+            info['type'] = self.definitions['type'][data_type.lower()]
+        except KeyError:
+            info['type'] = self._definitions[data_type.lower()]
+
         if gcm == 'ensemble':
             return self._get_modelled_ensemble(var=var, data_type=data_type,
                     locations=locations, sres=sres,
-                    ensemble_percentile=ensemble_percentile)
+                    ensemble_percentile=ensemble_percentile), info
         else:
             return self._get_modelled_gcm(var=var, data_type=data_type,
                     locations=locations, sres=sres,
-                    gcm=gcm)
+                    gcm=gcm), info
 
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
@@ -476,16 +584,10 @@ class Climate(object):
                         GCM id > location id > year or (year, sres) > month >
                             value.
         """
-        valid_dates = ( # API allows fixed 19-yr date ranges
-                1920, 1940, 1960, 1980,
-                2020, 2040, 2060, 2080,
-                )
-        date_range = 19
-
+        valid_dates = self.valid_modelled_dates
         # Construct the requested urls
         urls = []
-        for start_date in valid_dates:
-            end_date = start_date + date_range
+        for start_date, end_date in valid_dates:
             for loc in locations:
                 try:
                     int(loc) # basin ids are ints
@@ -510,18 +612,15 @@ class Climate(object):
                     gcm_key = data['gcm']
                 if gcm_key not in results:
                     results[gcm_key] = {}
-
                 # L2 - Location
                 if loc not in results[gcm_key]:
                     results[gcm_key][loc] = {}
-
                 # L3 - year / scenario
                 time = data['fromYear']
                 if data.has_key('scenario'):
                     time = (time, data['scenario'])
                 if time not in results[gcm_key][loc]:
                     results[gcm_key][loc][time] = {}
-
                 # L4 - values / months, depending on the result
                 if data.has_key('monthVals'):
                     for i, val in enumerate(data['monthVals'], 1):
@@ -548,7 +647,6 @@ class Climate(object):
                                 # (Time only subscriptable if a tuple, ie.
                                 # a future value with a sres)
                                 pass
-
         return results
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
@@ -556,22 +654,13 @@ class Climate(object):
 
         if var not in ['pr', 'tas']:
             # Then assume it's a stat. Stat directly replaces the var API arg.
-            # Only 2 or 3 date periods for future derived stats
-            valid_dates = (1961, 2046, 2081) 
+            valid_dates = self.valid_stat_dates
         else:
-            valid_dates = ( 
-                    1920, 1940, 1960, 1980,
-                    2020, 2040, 2060, 2080,
-                    )
-        date_range = 19
+            valid_dates = self.valid_modelled_dates
 
         # Construct the requested urls
         urls = []
-        for start_date in valid_dates:
-            end_date = start_date + date_range
-            # One exception - this range can be used for manom and aanom stats:
-            if start_date == 1961:
-                end_date = 2000 
+        for start_date, end_date in valid_dates:
             for loc in locations:
                 try:
                     int(loc) # basin ids are ints
@@ -633,4 +722,3 @@ class Climate(object):
                                 # a future value with a sres)
                                 pass
         return results
-
