@@ -381,7 +381,7 @@ class Climate(object):
     def __init__(self, cache=_fetch):
         self.fetch = cache
         self.base_url = "http://climatedataapi.worldbank.org/climateweb/rest/"
-        self.valid_modelled_dates = (
+        self._valid_modelled_dates = (
             (1920, 1939),
             (1940, 1959),
             (1960, 1979),
@@ -391,12 +391,14 @@ class Climate(object):
             (2060, 2079),
             (2080, 2099),
             )
-        self.valid_stat_dates = (
+        self._valid_stat_dates = (
             (1961, 2000),
             (2046, 2065),
             (2081, 2100),
             )
         self.definitions = dict(
+            # Unlike Indicators, can't get these from the API, so they'll
+            # have to be static, copied from /developers/climate-data-api.
             type=dict(
                 mavg="Monthly average",
                 aavg="Annual average",
@@ -450,8 +452,7 @@ class Climate(object):
                 ),
             )
         self._definitions=dict(
-            # Definitions that I want to show, but with different codes to the
-            # Climate API.
+            # Definitions where using different codes to the Climate API.
             pr="Precipitation (rainfall and assumed water equvialent) in "\
                "millimeters",
             tas="Temperature, in degrees Celsisus",
@@ -460,33 +461,76 @@ class Climate(object):
             )
 
     def get_precip_instrumental(self, locations, interval="year"):
+        """ Get historical precipitation data, "based on gridded climatologies
+        from the Climate Research Unit". These "are proxies, where modelling has
+        been used to extrapolate estimates where instrumental (station) data
+        were unavailable or unreliable". 
+
+        :locations: Get data for list of ISO country codes and World Bank 
+                    basin IDs.
+        :interval:  "year", "month" or "decade".
+        
+        returns:    Two dicts - data and metadata/info. Data keys are 
+                    location > time > value.
+        """
         return self._get_instrumental(var="pr", locations=locations,
                 interval=interval)
 
     def get_temp_instrumental(self, locations, interval="year"):
+        """ Get historical temperature data. See get_precip_instrumental(). """
         return self._get_instrumental(var="tas", locations=locations,
                 interval=interval)
 
     def get_precip_modelled(self, data_type, locations, gcm=None,
         sres=None, ensemble_percentiles=None):
+        """ Get precipitation data derived from global circulation models. 
+
+        :data_type:     Single type ID. See self.definitions['type'].
+        :locations:     Get data for list of ISO country codes and World Bank 
+                        basin IDs.
+        :gcm:           List of GCMs. If None, gets all except 'ensemble'. 
+                        See self.definitions['gcm'].
+        :sres:          Scenario ID - either 'a2' or 'b1'. If None, gets both.
+        :ensemble_percentiles:      If 'ensemble' is given in the GCMs, you can
+                        limit the percentile value of models. List, possible 
+                        percentiles are 10, 50, 90. If None, gets all.
+
+        :returns:   Data and metadata/info dict. Data dict keys are:
+                    gcm > location > (year, sres) > values.
+        """
         return self._get_modelled(var="pr", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
                 ensemble_percentiles=ensemble_percentiles)
 
     def get_temp_modelled(self, data_type, locations, gcm=None,
         sres=None, ensemble_percentiles=None):
+        """ Get modelled temperature data. See get_precip_modelled(). """
         return self._get_modelled(var="tas", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
                 ensemble_percentiles=ensemble_percentiles)
 
     def get_derived_stat(self, stat, data_type, locations, sres=None, 
             ensemble_percentiles=None):
+        """ Get precipitation or temperature statistic derived from 'ensemble'
+        data - ie. from all GCMs. 
+
+        :stat:          Single stat ID. See self.definitions['stat'].
+        :data_type:     Single type ID. See self.definitions['type'].
+        :locations:     Get data for list of ISO country codes and World Bank 
+                        basin IDs.
+        :sres:          Scenario ID - either 'a2' or 'b1'. If None, gets both.
+        :ensemble_percentiles:      List, possible percentiles are 10, 50, 90. 
+                                    If None, gets all.
+
+        :returns:   Data and metadata/info dict. Data dict keys are:
+                    gcm > location > (year, sres) > values.
+        """
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
                 ensemble_percentiles=ensemble_percentiles, gcm=['ensemble'])
 
     def _get_instrumental(self, var, locations, interval="year"):
-        # URL structures are different for countries and basins.
+        # Construct URLs
         urls = []
         for loc in locations:
             try:
@@ -511,7 +555,7 @@ class Climate(object):
                 # The response has different keys depending on the interval
                 if interval == 'month':
                     # + 1 to month as it uses keys 0-11, unless I missing some
-                    # domain-related reason I think 1-12 more sensible.
+                    # standard I think 1-12 more sensible.
                     results[loc][data['month'] + 1] = data['data']
                 else:
                     results[loc][data['year']] = data['data']
@@ -522,9 +566,8 @@ class Climate(object):
 
     def _get_modelled(self, var, data_type, locations, gcm=None,
         sres=None, ensemble_percentiles=None):
-        """ Single point of interaction, returns either an 
-        ensemble or gcm call, as they have different url and response
-        structures.
+        """ Handles the different modelled calls - ensemble, derived
+        stat, etc. 
         """
         # You can input 'aavg', 'aanom', to go w/ the proper 'mavg', 'manom'.
         # The actual API code is 'annualavg', etc.
@@ -560,6 +603,9 @@ class Climate(object):
         except KeyError:
             info['type'] = self._definitions[data_type.lower()]
 
+        # Ensemble and other modelled calls split into different methods, 
+        # as have different url and response structures, and it messy having
+        # having one function with lots of clauses etc.
         results = {}
         if gcm and 'ensemble' in gcm:
             results = self._get_modelled_ensemble(var=var, 
@@ -577,16 +623,8 @@ class Climate(object):
 
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
-        """
-        :gcm:       list, or 'ensemble'
-        :sres:      str
-        :returns:   Dict with one of the following layouts:
-                        GCM id > location id > year or (year, sres) > value.
-                        GCM id > location id > year or (year, sres) > month >
-                            value.
-        """
-        valid_dates = self.valid_modelled_dates
         # Construct the requested urls
+        valid_dates = self._valid_modelled_dates
         urls = []
         for start_date, end_date in valid_dates:
             for loc in locations:
@@ -629,7 +667,10 @@ class Climate(object):
                 elif data.has_key('annualVal'):
                     results[gcm_key][loc][time] = data['annualVal'][0]
 
-        # Filter unwanted 
+        # If sres or gcm values given, filter out unwanted
+        # results. Best to get data in small no. of calls and to take out
+        # unwanted, than to make a call for every percentile/GCM/SRES
+        # variation.
         if gcm:
             res_keys = results.keys()
             for k in res_keys:
@@ -652,14 +693,13 @@ class Climate(object):
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
             ensemble_percentiles=None):
-
         if var not in ['pr', 'tas']:
             # Then assume it's a stat. Stat directly replaces the var API arg.
-            valid_dates = self.valid_stat_dates
+            valid_dates = self._valid_stat_dates
         else:
-            valid_dates = self.valid_modelled_dates
+            valid_dates = self._valid_modelled_dates
 
-        # Construct the requested urls
+        # Construct the urls
         urls = []
         for start_date, end_date in valid_dates:
             for loc in locations:
@@ -700,10 +740,7 @@ class Climate(object):
                 elif data.has_key('annualVal'):
                     results[gcm_key][loc][time] = data['annualVal'][0]
 
-        # If sres or ensemble_percentiles values given, filter out unwanted
-        # results. Best to get data in small no. of calls and to take out
-        # unwanted, than to make a call for every percentile/GCM/SRES
-        # variation.
+        # Filter unwanted
         if ensemble_percentiles:
             res_keys = results.keys()
             for k in res_keys:
