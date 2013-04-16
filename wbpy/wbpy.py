@@ -102,7 +102,7 @@ class Indicators(object):
 
         # Arrange JSON data to be more accessible.
         results = {}
-        info = dict(indicators={}, countries={})
+        info = {}
         for dataset in response_data:
             country_id = dataset['country']['id']
             indicator_id = dataset['indicator']['id']
@@ -114,10 +114,8 @@ class Indicators(object):
             if date not in results[indicator_id][country_id]:
                 results[indicator_id][country_id][date] = dataset['value']
 
-            if indicator_id not in info['indicators']:
-                info['indicators'][indicator_id] = dataset['indicator']['value']
-            if country_id not in info['countries']:
-                info['countries'][country_id] = dataset['country']['value']
+            if indicator_id not in info:
+                info[indicator_id] = dataset['indicator']['value']
         return results, info
 
     def get_indicators(self, indicator_codes=None, match=None,
