@@ -116,7 +116,7 @@ class TestClimate(unittest.TestCase):
     def test_get_precip_modelled_ensemble_has_right_gcm_keys(self):
         c = wbpy.Climate()
         data, info = c.get_precip_modelled(data_type='aavg', locations=['usa'],
-                            gcm='ensemble')
+                            gcm=['ensemble'])
         self.assertTrue(all([k[0] == 'ensemble' for k in data.keys()]))
 
     def test_get_precip_modelled_mavg(self):
@@ -165,9 +165,16 @@ class TestClimate(unittest.TestCase):
 
     def test_ensemble_percentile_arg_filters(self):
         c = wbpy.Climate()
-        data, info = c.get_precip_modelled('mavg', ['GB'], gcm='ensemble',
+        data, info = c.get_precip_modelled('mavg', ['GB'], gcm=['ensemble'],
                 ensemble_percentiles=[10])
         self.assertEquals(data.keys(), [('ensemble', 10)])
+
+    def test_can_put_ensemble_as_a_model_in_gcm_list(self):
+        c = wbpy.Climate()
+        data, info = c.get_temp_modelled('aanom', ['AF'], 
+                gcm=['ensemble', 'cccma_cgcm3_1'], ensemble_percentiles=[50, 90])
+        expected_keys = [('ensemble', 90), ('ensemble', 50), 'cccma_cgcm3_1']
+        self.assertTrue(all([k in expected_keys for k in data.keys()]))
 
 if __name__ == '__main__':
     unittest.main()

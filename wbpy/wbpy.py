@@ -483,7 +483,7 @@ class Climate(object):
             ensemble_percentiles=None):
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
-                ensemble_percentiles=ensemble_percentiles, gcm='ensemble')
+                ensemble_percentiles=ensemble_percentiles, gcm=['ensemble'])
 
     def _get_instrumental(self, var, locations, interval="year"):
         # URL structures are different for countries and basins.
@@ -540,18 +540,13 @@ class Climate(object):
         # Info dict can be arranged from input
         info = {}
         info['gcm'] = {}
-        try:
-            # gcm might be 'ensemble'
-            info['gcm'][gcm.lower()] = self.definitions['gcm'][gcm.lower()]
-        except AttributeError:
-            try:
-                # Or it might be a list of models
-                for model in gcm: 
-                    info['gcm'][model] = self.definitions['gcm'][model.lower()]
-            except TypeError:
-                # Or it could be None
-                info['gcm'] = self.definitions['gcm'].copy()
-                del(info['gcm']['ensemble'])
+        if gcm:
+            for model in gcm: 
+                info['gcm'][model.lower()] = \
+                    self.definitions['gcm'][model.lower()]
+        else:
+            info['gcm'] = self.definitions['gcm'].copy()
+            del(info['gcm']['ensemble'])
         if sres:
             info['sres'] = self.definitions['sres'][sres.lower()]
         else:
@@ -565,14 +560,20 @@ class Climate(object):
         except KeyError:
             info['type'] = self._definitions[data_type.lower()]
 
-        if gcm == 'ensemble':
-            return self._get_modelled_ensemble(var=var, data_type=data_type,
-                    locations=locations, sres=sres,
-                    ensemble_percentiles=ensemble_percentiles), info
-        else:
-            return self._get_modelled_gcm(var=var, data_type=data_type,
-                    locations=locations, sres=sres,
-                    gcm=gcm), info
+        results = {}
+        if gcm and 'ensemble' in gcm:
+            results = self._get_modelled_ensemble(var=var, 
+                      data_type=data_type, locations=locations, sres=sres,
+                      ensemble_percentiles=ensemble_percentiles)
+        try:
+            more_gcms_given = len(gcm) > 1    
+        except TypeError:
+            pass
+        if gcm == None or more_gcms_given:
+            gcm_results = self._get_modelled_gcm(var=var, data_type=data_type,
+                          locations=locations, sres=sres, gcm=gcm)
+            results.update(gcm_results) # Dicts won't have same top-level keys
+        return results, info
 
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
