@@ -166,7 +166,7 @@ class TestClimate(unittest.TestCase):
     def test_ensemble_percentile_arg_filters(self):
         c = wbpy.Climate()
         data, info = c.get_precip_modelled('mavg', ['GB'], gcm='ensemble',
-                ensemble_percentile=[10])
+                ensemble_percentiles=[10])
         self.assertEquals(data.keys(), [('ensemble', 10)])
 
 if __name__ == '__main__':

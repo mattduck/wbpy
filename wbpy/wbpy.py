@@ -468,22 +468,22 @@ class Climate(object):
                 interval=interval)
 
     def get_precip_modelled(self, data_type, locations, gcm=None,
-        sres=None, ensemble_percentile=None):
+        sres=None, ensemble_percentiles=None):
         return self._get_modelled(var="pr", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentile=ensemble_percentile)
+                ensemble_percentiles=ensemble_percentiles)
 
     def get_temp_modelled(self, data_type, locations, gcm=None,
-        sres=None, ensemble_percentile=None):
+        sres=None, ensemble_percentiles=None):
         return self._get_modelled(var="tas", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentile=ensemble_percentile)
+                ensemble_percentiles=ensemble_percentiles)
 
     def get_derived_stat(self, stat, data_type, locations, sres=None, 
-            ensemble_percentile=None):
+            ensemble_percentiles=None):
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
-                ensemble_percentile=ensemble_percentile, gcm='ensemble')
+                ensemble_percentiles=ensemble_percentiles, gcm='ensemble')
 
     def _get_instrumental(self, var, locations, interval="year"):
         # URL structures are different for countries and basins.
@@ -521,7 +521,7 @@ class Climate(object):
         return results, info
 
     def _get_modelled(self, var, data_type, locations, gcm=None,
-        sres=None, ensemble_percentile=None):
+        sres=None, ensemble_percentiles=None):
         """ Single point of interaction, returns either an 
         ensemble or gcm call, as they have different url and response
         structures.
@@ -568,7 +568,7 @@ class Climate(object):
         if gcm == 'ensemble':
             return self._get_modelled_ensemble(var=var, data_type=data_type,
                     locations=locations, sres=sres,
-                    ensemble_percentile=ensemble_percentile), info
+                    ensemble_percentiles=ensemble_percentiles), info
         else:
             return self._get_modelled_gcm(var=var, data_type=data_type,
                     locations=locations, sres=sres,
@@ -650,7 +650,7 @@ class Climate(object):
         return results
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
-            ensemble_percentile=None):
+            ensemble_percentiles=None):
 
         if var not in ['pr', 'tas']:
             # Then assume it's a stat. Stat directly replaces the var API arg.
@@ -699,14 +699,14 @@ class Climate(object):
                 elif data.has_key('annualVal'):
                     results[gcm_key][loc][time] = data['annualVal'][0]
 
-        # If sres or ensemble_percentile values given, filter out unwanted
+        # If sres or ensemble_percentiles values given, filter out unwanted
         # results. Best to get data in small no. of calls and to take out
         # unwanted, than to make a call for every percentile/GCM/SRES
         # variation.
-        if ensemble_percentile:
+        if ensemble_percentiles:
             res_keys = results.keys()
             for k in res_keys:
-                if str(k[1]) not in [str(x) for x in ensemble_percentile]:
+                if str(k[1]) not in [str(x) for x in ensemble_percentiles]:
                     del(results[k])
         if sres:
             for gcm_key in results:
