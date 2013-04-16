@@ -146,7 +146,7 @@ class Indicators(object):
             # If value contains an indicator code, include the key in the
             # results.
             for k, v in results.items():
-                v_string = "{}".format(v).lower()
+                v_string = u"{}".format(v).lower()
                 for code_match in code_matches:
                     if code_match in v_string:
                         common_matches[k] = v
@@ -263,9 +263,9 @@ class Indicators(object):
             for k in sorted(results.keys(), key=natural_keys):
                 v = results[k]
                 try:
-                    print "{:30} {}".format(k, v['name'])
+                    print u"{:30} {}".format(k, v['name'])
                 except TypeError: # ie. is value from get_country_indicators()
-                    print "{:30} {}".format(k, v)
+                    print u"{:30} {}".format(k, v)
 
     def match_data(self, ss, results):
         """ For a given dict (eg. of ``get`` results), filter out all 
@@ -283,7 +283,7 @@ class Indicators(object):
         ss = ss.lower()
         search_matches = {}
         for k, v in results.items():
-            if ss in  "{}".format(v).lower():
+            if ss in  u"{}".format(v).lower():
                 search_matches[k] = v
         return search_matches
 
@@ -330,7 +330,7 @@ class Indicators(object):
                 v = str(v)
             if not isinstance(v, basestring): 
                 v = ";".join([str(x) for x in v]) 
-            options.append("{0}={1}".format(k, v))
+            options.append(u"{0}={1}".format(k, v))
 
         query_string = '&'.join(options)
         new_url = "".join([self.base_url, rest_url, query_string])
