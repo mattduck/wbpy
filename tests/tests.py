@@ -163,5 +163,11 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(info['sres'].has_key('b1'))
         self.assertTrue(info['type'] == c.definitions['type']['aanom'])
 
+    def test_ensemble_percentile_arg_filters(self):
+        c = wbpy.Climate()
+        data, info = c.get_precip_modelled('mavg', ['GB'], gcm='ensemble',
+                ensemble_percentile=[10])
+        self.assertEquals(data.keys(), [('ensemble', 10)])
+
 if __name__ == '__main__':
     unittest.main()

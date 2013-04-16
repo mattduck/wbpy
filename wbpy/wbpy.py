@@ -471,15 +471,15 @@ class Climate(object):
         sres=None, ensemble_percentile=None):
         return self._get_modelled(var="pr", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentile=None)
+                ensemble_percentile=ensemble_percentile)
 
     def get_temp_modelled(self, data_type, locations, gcm=None,
         sres=None, ensemble_percentile=None):
         return self._get_modelled(var="tas", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentile=None)
+                ensemble_percentile=ensemble_percentile)
 
-    def get_derived_stat(self, data_type, stat, locations, sres=None, 
+    def get_derived_stat(self, stat, data_type, locations, sres=None, 
             ensemble_percentile=None):
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
@@ -706,7 +706,7 @@ class Climate(object):
         if ensemble_percentile:
             res_keys = results.keys()
             for k in res_keys:
-                if str(k[0]) not in [str(x) for x in ensemble_percentiles]:
+                if str(k[1]) not in [str(x) for x in ensemble_percentile]:
                     del(results[k])
         if sres:
             for gcm_key in results:
