@@ -50,10 +50,10 @@ Connect to the Indicators API and get a time series::
                             '2003': '127718000'}}}
 
     >>> print info                          # Values for the included API codes.
-    {'countries': {'FR': {'value': 'France'},
-                   'GB': {'value': 'United Kingdom'},
-                   'JP': {'value': 'Japan'}},
-     'indicators': {'SP.POP.TOTL': {'value': 'Population, total'}}} 
+    {'countries': {'FR': 'France',
+                   'GB': 'United Kingdom',
+                   'JP': 'Japan'},
+     'indicators': {'SP.POP.TOTL': 'Population, total'}} 
 
 If you use Pandas, you can pass the data straight in::
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import logging
 import urllib2
@@ -114,11 +115,9 @@ class Indicators(object):
                 results[indicator_id][country_id][date] = dataset['value']
 
             if indicator_id not in info['indicators']:
-                info['indicators'][indicator_id] = dict(
-                        value=dataset['indicator']['value'])
+                info['indicators'][indicator_id] = dataset['indicator']['value']
             if country_id not in info['countries']:
-                info['countries'][country_id] = dict(
-                        value=dataset['country']['value'])
+                info['countries'][country_id] = dataset['country']['value']
         return results, info
 
     def get_indicators(self, indicator_codes=None, match=None,
@@ -246,32 +245,27 @@ class Indicators(object):
 
         :param match:   See ``match_data``.
         """
-        # There some juggling depending on dict layout, as prefer to keep it
-        # to one print function.
-
-        # If this is the 'info' dict from ``get_country_indicators``, process
+        # If this is the 'info' dict from get_country_indicators(), process
         # both halves (countries + indicators) separately:
-        if results.has_key('countries'):
+        if results.has_key('countries') and results.has_key('indicators'):
             self.print_codes(results['countries'])
-        if results.has_key('indicators'):
             self.print_codes(results['indicators'])
+        else:
+            if match:
+                results = self.match_data(match, results)
 
-        if match:
-            results = self.match_data(match, results)
+            # Natural sort the result keys for nicer print order
+            def try_int(text):
+                return int(text) if text.isdigit() else text
+            def natural_keys(text):
+                return [try_int(k) for k in re.split("(\d+)", text)]
 
-        # Natural sort the result keys for nicer print order
-        def try_int(text):
-            return int(text) if text.isdigit() else text
-        def natural_keys(text):
-            return [try_int(k) for k in re.split("(\d+)", text)]
-
-        for k in sorted(results.keys(), key=natural_keys):
-            v = results[k]
-            for value_key in ['value', 'name']: 
+            for k in sorted(results.keys(), key=natural_keys):
+                v = results[k]
                 try:
-                    print "{:30} {}".format(k, v[value_key])
-                except KeyError:
-                    pass
+                    print "{:30} {}".format(k, v['name'])
+                except TypeError: # ie. is value from get_country_indicators()
+                    print "{:30} {}".format(k, v)
 
     def match_data(self, ss, results):
         """ For a given dict (eg. of ``get`` results), filter out all 
