@@ -9,14 +9,12 @@ class TestIndicators(unittest.TestCase):
         topic = data.values()[1] 
         self.assertTrue(topic.has_key('value'))
         self.assertTrue(topic.has_key('sourceNote'))
-        self.assertTrue(topic.has_key('id'))
 
     def test_get_sources_returns_sources(self):
         ind = wbpy.Indicators()
         data = ind.get_sources()
         source = data.values()[1]
         self.assertTrue(source.has_key('name'))
-        self.assertTrue(source.has_key('id'))
 
     def test_get_countries_returns_countries(self):
         ind = wbpy.Indicators()
@@ -85,6 +83,16 @@ class TestIndicators(unittest.TestCase):
         ind.print_codes(ind.get_indicators())
         assert True
 
+    def test_no_duplicate_key_vals_in_Get_results(self):
+        # The response keys are 'iso2Code' and 'code' respectively
+        ind = wbpy.Indicators()
+        countries = ind.get_countries()
+        keys = all([v.has_key('iso2Code') == False for v in countries.values()])
+        self.assertTrue(keys)
+        regions = ind.get_regions()
+        keys = all([v.has_key('code') == False for v in regions.values()])
+        self.assertTrue(keys)
+
 class TestClimate(unittest.TestCase):
     def test_get_precip_instrumental(self):
         # Test can use multiple locations.
@@ -146,4 +154,3 @@ class TestClimate(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

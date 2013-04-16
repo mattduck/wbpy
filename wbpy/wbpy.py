@@ -372,6 +372,7 @@ class Indicators(object):
         tidier_data = {}
         for data in world_bank_response:
             tidier_data[data[response_key]] = data
+            del(data[response_key]) # No point duplicating in both key and val
         if match:
             tidier_data = self.match_data(match, tidier_data)
         return tidier_data
