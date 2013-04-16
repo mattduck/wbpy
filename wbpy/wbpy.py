@@ -550,7 +550,7 @@ class Climate(object):
                     info['gcm'][model] = self.definitions['gcm'][model.lower()]
             except TypeError:
                 # Or it could be None
-                info['gcm'] = self.definitions['gcm']
+                info['gcm'] = self.definitions['gcm'].copy()
                 del(info['gcm']['ensemble'])
         if sres:
             info['sres'] = self.definitions['sres'][sres.lower()]
