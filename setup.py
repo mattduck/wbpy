@@ -10,4 +10,5 @@ setup(  name="wbpy",
         author_email="matt@mattduck.com",
         url="https://github.com/mattduck/wbpy",
         packages=['wbpy'],
+        install_requires=['pycountry'],
      )
