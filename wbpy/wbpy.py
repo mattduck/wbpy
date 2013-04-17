@@ -165,7 +165,7 @@ class Indicators(object):
         :returns:   Dict of countries using 2-letter ISO codes as keys.
         """
         if country_codes:
-            country_codes = [_covert_to_alpha3(code) for code in country_codes]
+            country_codes = [_convert_to_alpha3(code) for code in country_codes]
         return self._get_indicator_data(country_codes, rest_url="country",
                 match=match, response_key="iso2Code", **kwargs)
 

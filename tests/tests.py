@@ -18,8 +18,8 @@ class TestIndicators(unittest.TestCase):
 
     def test_get_countries_returns_countries(self):
         ind = wbpy.Indicators()
-        data = ind.get_countries()
         test_keys = ['GB', 'AF', 'FR', 'IT', 'BR']
+        data = ind.get_countries(test_keys)
         self.assertTrue(all([key in data for key in test_keys]))
 
     def test_get_income_levels_returns_income_levels(self):
