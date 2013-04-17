@@ -281,7 +281,7 @@ class Indicators(object):
         ss = ss.lower()
         search_matches = {}
         for k, v in results.items():
-            if ss in  u"{}".format(v).lower():
+            if ss in  u"{0} {1}".format(k, v).lower():
                 search_matches[k] = v
         return search_matches
 

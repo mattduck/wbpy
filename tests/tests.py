@@ -98,6 +98,11 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_indicators(common_only=True)
         self.assertTrue(len(data) > 500)
 
+    def test_that_keys_get_matched_as_well_as_values(self):
+        ind = wbpy.Indicators()
+        data = ind.get_sources(match="11") # 11 is a key, and not in the value
+        self.assertIn("11", [str(x) for x in data.keys()])
+
 class TestClimate(unittest.TestCase):
     def test_get_precip_instrumental(self):
         # Test can use multiple locations.
