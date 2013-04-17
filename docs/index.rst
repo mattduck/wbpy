@@ -7,14 +7,19 @@
    anything.
 .. include:: ../README.rst 
 
-.. Contents
-  ========
-  .. toctree::
-     :maxdepth: 2
+Further Contents
+================
+
+.. toctree::
+    :maxdepth: 2
+    
+    indicators
+    climate
+     
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`search`
-.. * :ref:`modindex`
+* :ref:`modindex`

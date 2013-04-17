@@ -460,23 +460,24 @@ class Climate(object):
             )
 
     def get_precip_instrumental(self, locations, interval="year"):
-        """ Get historical precipitation data, "based on gridded climatologies
-        from the Climate Research Unit". These "are proxies, where modelling has
+        """ Get historical precipitation data, `based on gridded climatologies
+        from the Climate Research Unit`. These `are proxies, where modelling has
         been used to extrapolate estimates where instrumental (station) data
-        were unavailable or unreliable". 
+        were unavailable or unreliable`. 
 
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
-        :param interval:    "year", "month" or "decade".
+        :param interval:    `year`, `month` or `decade`.
         
         :returns:   Data and metadata dicts. Data keys are 
-                    location > time > value.
+                    `location` > `time` > `value`.
         """
         return self._get_instrumental(var="pr", locations=locations,
                 interval=interval)
 
     def get_temp_instrumental(self, locations, interval="year"):
-        """ Get historical temperature data. See get_precip_instrumental(). """
+        """ Get historical temperature data. See ``get_precip_instrumental()``. 
+        """
         return self._get_instrumental(var="tas", locations=locations,
                 interval=interval)
 
@@ -487,17 +488,17 @@ class Climate(object):
         :param data_type:   Single type ID. See ``self.definitions['type']``.
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
-        :param gcm:         List of GCMs. If None, gets all except 'ensemble'. 
+        :param gcm:         List of GCMs. If None, gets all except `ensemble`. 
                             See ``self.definitions['gcm']``.
-        :param sres:        Scenario ID - either 'a2' or 'b1'. If None, gets 
+        :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
-        :param ensemble_percentiles:    If 'ensemble' is given in the GCMs, you 
+        :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
                             can limit the percentile value of models. List, 
-                            possible percentiles are ``10`, ``50``, ``90``. 
+                            possible percentiles are `10`, `50`, `90`. 
                             If None, gets all.
 
         :returns:   Data and metadata dicts. Data dict keys are:
-                    gcm > location > (year, sres) > values.
+                    `gcm` > `location` > `(year, sres)` > `values`.
         """
         return self._get_modelled(var="pr", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres,
@@ -512,22 +513,22 @@ class Climate(object):
 
     def get_derived_stat(self, stat, data_type, locations, sres=None, 
             ensemble_percentiles=None):
-        """ Get precipitation or temperature statistic derived from 'ensemble'
+        """ Get precipitation or temperature statistic derived from `ensemble`
         data - ie. from all GCMs. 
 
         :param stat:        Single stat ID. See ``self.definitions['stat']``.
         :param data_type:   Single type ID. See ``self.definitions['type']``.
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
-        :param sres:        Scenario ID - either 'a2' or 'b1'. If None, gets 
+        :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
-        :param ensemble_percentiles:    If 'ensemble' is given in the GCMs, you 
+        :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
                             can limit the percentile value of models. List, 
-                            possible percentiles are ``10```, ``50``, ``90``. 
+                            possible percentiles are `10`, `50`, `90`. 
                             If None, gets all.
 
         :returns:   Data and metadata dicts. Data dict keys are:
-                    gcm > location > (year, sres) > values.
+                    `gcm` > `location` > `(year, sres)` > values.
         """
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
