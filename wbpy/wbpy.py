@@ -102,7 +102,7 @@ class Indicators(object):
 
         # Arrange JSON data to be more accessible.
         results = {}
-        info = {}
+        metadata = {}
         for dataset in response_data:
             country_id = dataset['country']['id']
             indicator_id = dataset['indicator']['id']
@@ -114,9 +114,9 @@ class Indicators(object):
             if date not in results[indicator_id][country_id]:
                 results[indicator_id][country_id][date] = dataset['value']
 
-            if indicator_id not in info:
-                info[indicator_id] = dataset['indicator']['value']
-        return results, info
+            if indicator_id not in metadata:
+                metadata[indicator_id] = dataset['indicator']['value']
+        return results, metadata
 
     def get_indicators(self, indicator_codes=None, match=None,
             common_only=False, **kwargs):
@@ -239,11 +239,11 @@ class Indicators(object):
     def print_codes(self, results, match=None):
         """ Print formatted list of API IDs + values/names for the results of
         any of the ``get`` functions.  (For ``get_country_indicators``, only the
-        'info' dict will print properly, the 'data' one will not).
+        metadata dict will print properly, the 'data' one will not).
 
         :param match:   See ``match_data``.
         """
-        # If this is the 'info' dict from get_country_indicators(), process
+        # If this is the 'metadata' dict from get_country_indicators(), process
         # both halves (countries + indicators) separately:
         if results.has_key('countries') and results.has_key('indicators'):
             self.print_codes(results['countries'])
@@ -468,7 +468,7 @@ class Climate(object):
                     basin IDs.
         :interval:  "year", "month" or "decade".
         
-        returns:    Two dicts - data and metadata/info. Data keys are 
+        returns:    Two dicts - data and metadata. Data keys are 
                     location > time > value.
         """
         return self._get_instrumental(var="pr", locations=locations,
@@ -493,7 +493,7 @@ class Climate(object):
                         limit the percentile value of models. List, possible 
                         percentiles are 10, 50, 90. If None, gets all.
 
-        :returns:   Data and metadata/info dict. Data dict keys are:
+        :returns:   Data and metadata dicts. Data dict keys are:
                     gcm > location > (year, sres) > values.
         """
         return self._get_modelled(var="pr", data_type=data_type,
@@ -520,7 +520,7 @@ class Climate(object):
         :ensemble_percentiles:      List, possible percentiles are 10, 50, 90. 
                                     If None, gets all.
 
-        :returns:   Data and metadata/info dict. Data dict keys are:
+        :returns:   Data and metadata dicts. Data dict keys are:
                     gcm > location > (year, sres) > values.
         """
         return self._get_modelled(var=stat, data_type=data_type,
@@ -557,10 +557,10 @@ class Climate(object):
                     results[loc][data['month'] + 1] = data['data']
                 else:
                     results[loc][data['year']] = data['data']
-        info = {}
-        info['stat'] = self._definitions[var] # pr or tas
-        info['interval'] = interval
-        return results, info
+        metadata = {}
+        metadata['stat'] = self._definitions[var] # pr or tas
+        metadata['interval'] = interval
+        return results, metadata
 
     def _get_modelled(self, var, data_type, locations, gcm=None,
         sres=None, ensemble_percentiles=None):
@@ -579,27 +579,27 @@ class Climate(object):
         locations = [_convert_to_alpha3(code) for code in locations]
 
         # Info dict can be arranged from input
-        info = {}
-        info['gcm'] = {}
+        metadata = {}
+        metadata['gcm'] = {}
         if gcm:
             for model in gcm: 
-                info['gcm'][model.lower()] = \
+                metadata['gcm'][model.lower()] = \
                     self.definitions['gcm'][model.lower()]
         else:
-            info['gcm'] = self.definitions['gcm'].copy()
-            del(info['gcm']['ensemble'])
+            metadata['gcm'] = self.definitions['gcm'].copy()
+            del(metadata['gcm']['ensemble'])
         if sres:
-            info['sres'] = self.definitions['sres'][sres.lower()]
+            metadata['sres'] = self.definitions['sres'][sres.lower()]
         else:
-            info['sres'] = self.definitions['sres']
+            metadata['sres'] = self.definitions['sres']
         try:
-            info['stat'] = self.definitions['stat'][var.lower()]
+            metadata['stat'] = self.definitions['stat'][var.lower()]
         except KeyError:
-            info['stat'] = self._definitions[var] # pr or tas
+            metadata['stat'] = self._definitions[var] # pr or tas
         try:
-            info['type'] = self.definitions['type'][data_type.lower()]
+            metadata['type'] = self.definitions['type'][data_type.lower()]
         except KeyError:
-            info['type'] = self._definitions[data_type.lower()]
+            metadata['type'] = self._definitions[data_type.lower()]
 
         # Ensemble and other modelled calls split into different methods, 
         # as have different url and response structures, and it messy having
@@ -617,7 +617,7 @@ class Climate(object):
             gcm_results = self._get_modelled_gcm(var=var, data_type=data_type,
                           locations=locations, sres=sres, gcm=gcm)
             results.update(gcm_results) # Dicts won't have same top-level keys
-        return results, info
+        return results, metadata
 
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
@@ -639,7 +639,7 @@ class Climate(object):
 
         # Get responses and tidy results
         results = {}
-        info = {}
+        metadata = {}
         for loc, url in urls:
             loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
@@ -713,7 +713,7 @@ class Climate(object):
 
         # Get responses and tidy results
         results = {}
-        info = {}
+        metadata = {}
         for loc, url in urls:
             loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))

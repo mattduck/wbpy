@@ -43,11 +43,11 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_indicators(common_only=True)
         self.assertTrue(len(data) < 2000)
 
-    def test_get_country_indicators_returns_data_and_info_dicts(self):
+    def test_get_country_indicators_returns_data_and_metadata_dicts(self):
         ind = wbpy.Indicators()
-        data, info = ind.get_country_indicators(['SP.POP.TOTL'], ['GB'], date=2010)
+        data, md = ind.get_country_indicators(['SP.POP.TOTL'], ['GB'], date=2010)
         self.assertIsNotNone(data)
-        self.assertIsNotNone(info)
+        self.assertIsNotNone(md)
         try:
             val = data['SP.POP.TOTL']['GB']['2010']
             assert True
@@ -72,10 +72,10 @@ class TestIndicators(unittest.TestCase):
                 matches.append('4' in [topic['id'] for topic in v['topics']])
         self.assertTrue(all(matches))
 
-    def test_no_print_exceptions_for_indicators_data_info(self):
+    def test_no_print_exceptions_for_indicators_data_metadata(self):
         ind = wbpy.Indicators()
-        data, info = ind.get_country_indicators(['SP.POP.TOTL'])
-        ind.print_codes(info)
+        data, md = ind.get_country_indicators(['SP.POP.TOTL'])
+        ind.print_codes(md)
         assert True
 
     def test_no_utf8_errors_when_printing_all_indicators(self):
@@ -99,7 +99,7 @@ class TestClimate(unittest.TestCase):
         # Test ISO codes are upper case.
         # Test result in expected dict format 
         c = wbpy.Climate()
-        data, info = c.get_precip_instrumental(locations=['bra', 'chn'], 
+        data, md = c.get_precip_instrumental(locations=['bra', 'chn'], 
                                                interval='year')
         self.assertTrue(data['BR'].has_key(1990))
         self.assertTrue(data['CN'].has_key(1975))
@@ -108,28 +108,28 @@ class TestClimate(unittest.TestCase):
         # Test month keys get converted to 1-12, instead of 0-11
         # Test basin id numbers work 
         c = wbpy.Climate()
-        data, info = c.get_temp_instrumental(locations=['gbr', 2], 
+        data, md = c.get_temp_instrumental(locations=['gbr', 2], 
                                              interval='month')
         self.assertTrue(data['GB'].has_key(12))
         self.assertTrue(data[2].has_key(1))
 
     def test_get_precip_modelled_ensemble_has_right_gcm_keys(self):
         c = wbpy.Climate()
-        data, info = c.get_precip_modelled(data_type='aavg', locations=['usa'],
+        data, md = c.get_precip_modelled(data_type='aavg', locations=['usa'],
                             gcm=['ensemble'])
         self.assertTrue(all([k[0] == 'ensemble' for k in data.keys()]))
 
     def test_get_precip_modelled_mavg(self):
         # General results layout - keys etc
         c = wbpy.Climate()
-        data, info = c.get_precip_modelled(data_type='mavg', locations=['bra'])
+        data, md = c.get_precip_modelled(data_type='mavg', locations=['bra'])
         self.assertTrue(data['mpi_echam5']['BR'][1920].has_key(12))
 
     def test_get_temp_modelled_aanom(self):
         # Test sres filter works
         # Test can pass 'aanom' as data type
         c = wbpy.Climate()
-        data, info = c.get_temp_modelled(data_type='aanom', 
+        data, md = c.get_temp_modelled(data_type='aanom', 
                 locations=['USA', 'AUS'], sres='A2')
         sres = []
         for country_data in data['gfdl_cm2_1'].values():
@@ -143,35 +143,35 @@ class TestClimate(unittest.TestCase):
     def test_get_temp_modelled_gcm_filter(self):
         c = wbpy.Climate()
         gcms = ['cnrm_cm3', 'ukmo_hadcm3']
-        data, info = c.get_temp_modelled(data_type='mavg', locations=['gbr'],
+        data, md = c.get_temp_modelled(data_type='mavg', locations=['gbr'],
                 gcm=gcms)
         self.assertTrue(all([k in gcms for k in data.keys()]))
 
     def test_get_derived_stat(self):
         # Test can pass alpha2 codes
         c = wbpy.Climate()
-        data, info = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
+        data, md = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
                 locations=['gb', 'JP'])
         self.assertTrue(data[('ensemble', 10)]['JP'].has_key((2046, 'b1')))
 
-    def test_returned_info_is_correct(self):
+    def test_returned_metadata_is_correct(self):
         # Also test Climate().definitions exist
         c = wbpy.Climate()
-        data, info = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
+        data, md = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
                 locations=['gb', 'JP'])
-        self.assertTrue(info['sres'].has_key('a2'))
-        self.assertTrue(info['sres'].has_key('b1'))
-        self.assertTrue(info['type'] == c.definitions['type']['aanom'])
+        self.assertTrue(md['sres'].has_key('a2'))
+        self.assertTrue(md['sres'].has_key('b1'))
+        self.assertTrue(md['type'] == c.definitions['type']['aanom'])
 
     def test_ensemble_percentile_arg_filters(self):
         c = wbpy.Climate()
-        data, info = c.get_precip_modelled('mavg', ['GB'], gcm=['ensemble'],
+        data, md = c.get_precip_modelled('mavg', ['GB'], gcm=['ensemble'],
                 ensemble_percentiles=[10])
         self.assertEquals(data.keys(), [('ensemble', 10)])
 
     def test_can_put_ensemble_as_a_model_in_gcm_list(self):
         c = wbpy.Climate()
-        data, info = c.get_temp_modelled('aanom', ['AF'], 
+        data, md = c.get_temp_modelled('aanom', ['AF'], 
                 gcm=['ensemble', 'cccma_cgcm3_1'], ensemble_percentiles=[50, 90])
         expected_keys = [('ensemble', 90), ('ensemble', 50), 'cccma_cgcm3_1']
         self.assertTrue(all([k in expected_keys for k in data.keys()]))
