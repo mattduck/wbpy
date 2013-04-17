@@ -183,5 +183,12 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(all([k in expected_keys for k in data.keys()]))
         self.assertIsNotNone(md['dates'])
 
+    def test_aanom_modelled_gcm_results_arent_blank(self):
+        c = wbpy.Climate()
+        data, md = c.get_precip_modelled('aanom', ['GB'])
+        for locs in data.values():
+            for value in locs['GB'].values():
+                self.assertNotEqual({}, value )
+
 if __name__ == '__main__':
     unittest.main()

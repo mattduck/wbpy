@@ -670,8 +670,8 @@ class Climate(object):
                 if data.has_key('monthVals'):
                     for i, val in enumerate(data['monthVals'], 1):
                         results[gcm_key][loc][time][i] = val
-                elif data.has_key('annualVal'):
-                    results[gcm_key][loc][time] = data['annualVal'][0]
+                elif data.has_key('annualData'):
+                    results[gcm_key][loc][time] = data['annualData'][0]
 
         # If sres or gcm values given, filter out unwanted
         # results. Best to get data in small no. of calls and to take out
