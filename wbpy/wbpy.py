@@ -605,17 +605,23 @@ class Climate(object):
         # as have different url and response structures, and it messy having
         # having one function with lots of clauses etc.
         results = {}
+        metadata['dates'] = {}
         if gcm and 'ensemble' in gcm:
-            results = self._get_modelled_ensemble(var=var, 
-                      data_type=data_type, locations=locations, sres=sres,
-                      ensemble_percentiles=ensemble_percentiles)
+            results, dates = self._get_modelled_ensemble(var=var, 
+                         data_type=data_type, locations=locations, 
+                         sres=sres, ensemble_percentiles=ensemble_percentiles)
+            for fr, to in dates:
+                metadata['dates'][fr] = to
         try:
             more_gcms_given = len(gcm) > 1    
         except TypeError:
             pass
         if gcm == None or more_gcms_given:
-            gcm_results = self._get_modelled_gcm(var=var, data_type=data_type,
-                          locations=locations, sres=sres, gcm=gcm)
+            gcm_results, dates = self._get_modelled_gcm(var=var, 
+                                 data_type=data_type, locations=locations, 
+                                 sres=sres, gcm=gcm)
+            for fr, to in dates:
+                metadata['dates'][fr] = to
             results.update(gcm_results) # Dicts won't have same top-level keys
         return results, metadata
 
@@ -639,7 +645,7 @@ class Climate(object):
 
         # Get responses and tidy results
         results = {}
-        metadata = {}
+        dates = [] # dates metadata
         for loc, url in urls:
             loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
@@ -654,6 +660,7 @@ class Climate(object):
                     results[gcm_key][loc] = {}
                 # L3 - year / scenario
                 time = data['fromYear']
+                dates.append((time, data['toYear']))
                 if data.has_key('scenario'):
                     time = (time, data['scenario'])
                 if time not in results[gcm_key][loc]:
@@ -687,7 +694,7 @@ class Climate(object):
                                 # (Time only subscriptable if a tuple, ie.
                                 # a future value with a sres)
                                 pass
-        return results
+        return results, set(dates)
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
             ensemble_percentiles=None):
@@ -713,7 +720,7 @@ class Climate(object):
 
         # Get responses and tidy results
         results = {}
-        metadata = {}
+        dates = [] 
         for loc, url in urls:
             loc = _convert_to_alpha2(loc)
             response = json.loads(self.fetch(url))
@@ -727,6 +734,7 @@ class Climate(object):
                     results[gcm_key][loc] = {}
                 # L3 - year / scenario
                 time = data['fromYear']
+                dates.append((time, data['toYear']))
                 if data.has_key('scenario'):
                     time = (time, data['scenario'])
                 if time not in results[gcm_key][loc]:
@@ -757,4 +765,4 @@ class Climate(object):
                                 # (Time only subscriptable if a tuple, ie.
                                 # a future value with a sres)
                                 pass
-        return results
+        return results, set(dates)

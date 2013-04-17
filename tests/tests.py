@@ -170,11 +170,13 @@ class TestClimate(unittest.TestCase):
         self.assertEquals(data.keys(), [('ensemble', 10)])
 
     def test_can_put_ensemble_as_a_model_in_gcm_list(self):
+        # Also check dates exist in metadata
         c = wbpy.Climate()
         data, md = c.get_temp_modelled('aanom', ['AF'], 
                 gcm=['ensemble', 'cccma_cgcm3_1'], ensemble_percentiles=[50, 90])
         expected_keys = [('ensemble', 90), ('ensemble', 50), 'cccma_cgcm3_1']
         self.assertTrue(all([k in expected_keys for k in data.keys()]))
+        self.assertIsNotNone(md['dates'])
 
 if __name__ == '__main__':
     unittest.main()
