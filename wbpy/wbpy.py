@@ -133,20 +133,20 @@ class Indicators(object):
         
         :returns:   Dict of indicators, using ID codes as keys.
         """
-        results = self._get_indicator_data(indicator_codes, rest_url="indicator",
-                response_key="id", match=match, **kwargs)
+        results = self._get_indicator_data(indicator_codes, 
+                rest_url="indicator", response_key="id", match=match, **kwargs)
         if common_only == True:
             page = self.fetch("http://data.worldbank.org/indicator/all")
             ind_codes = re.compile("(?<=http://data.worldbank.org/indicator/)"\
                                    "[A-Za-z0-9\.]+(?=\">)")
             common_matches = {}
-            code_matches = set([code.lower() for code in ind_codes.findall(page)])
-            # If value contains an indicator code, include the key in the
-            # results.
+            code_matches = set([code.lower() for code in \
+                                ind_codes.findall(page)])
+            # If key matches common code, include in results.
             for k, v in results.items():
-                v_string = u"{}".format(v).lower()
+                low_k = k.lower()
                 for code_match in code_matches:
-                    if code_match in v_string:
+                    if code_match in low_k:
                         common_matches[k] = v
                         break
             return common_matches
@@ -348,7 +348,8 @@ class Indicators(object):
             content += self._get_api_response_as_json(next_page)
         return content
 
-    def _get_indicator_data(self, api_ids, rest_url, response_key, match=None, **kwargs):
+    def _get_indicator_data(self, api_ids, rest_url, response_key, match=None, 
+                            **kwargs):
         """ 
         :param api_ids:         API codes for the indicator, eg. if calling a 
                                 topic might be [1, 2, 5].
@@ -449,7 +450,7 @@ class Climate(object):
                 b1="B1 Scenario",
                 ),
             )
-        self._definitions=dict(
+        self._definitions = dict(
             # Definitions where using different codes to the Climate API.
             pr="Precipitation (rainfall and assumed water equvialent) in "\
                "millimeters",
@@ -539,8 +540,8 @@ class Climate(object):
                 urls.append((loc, full_url))
             except ValueError:
                 loc = _convert_to_alpha3(loc)
-                countries_url = "v1/country/cru/{0}/{1}/{2}".format(var, interval,
-                                loc)
+                countries_url = "v1/country/cru/{0}/{1}/{2}".format(var, 
+                                interval, loc)
                 full_url = "".join([self.base_url, countries_url, ".json"])
                 urls.append((loc, full_url))
 

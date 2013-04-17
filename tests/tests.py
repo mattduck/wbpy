@@ -93,6 +93,11 @@ class TestIndicators(unittest.TestCase):
         keys = all([v.has_key('code') == False for v in regions.values()])
         self.assertTrue(keys)
 
+    def test_get_indicators_common_only_not_empty(self):
+        ind = wbpy.Indicators()
+        data = ind.get_indicators(common_only=True)
+        self.assertTrue(len(data) > 500)
+
 class TestClimate(unittest.TestCase):
     def test_get_precip_instrumental(self):
         # Test can use multiple locations.
