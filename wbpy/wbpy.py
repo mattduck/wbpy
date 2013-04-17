@@ -469,7 +469,7 @@ class Climate(object):
                     basin IDs.
         :interval:  "year", "month" or "decade".
         
-        returns:    Two dicts - data and metadata. Data keys are 
+        :returns:    Two dicts - data and metadata. Data keys are 
                     location > time > value.
         """
         return self._get_instrumental(var="pr", locations=locations,
@@ -484,11 +484,11 @@ class Climate(object):
         sres=None, ensemble_percentiles=None):
         """ Get precipitation data derived from global circulation models. 
 
-        :data_type:     Single type ID. See self.definitions['type'].
+        :data_type:     Single type ID. See ``self.definitions['type']``.
         :locations:     Get data for list of ISO country codes and World Bank 
                         basin IDs.
         :gcm:           List of GCMs. If None, gets all except 'ensemble'. 
-                        See self.definitions['gcm'].
+                        See ``self.definitions['gcm']``.
         :sres:          Scenario ID - either 'a2' or 'b1'. If None, gets both.
         :ensemble_percentiles:      If 'ensemble' is given in the GCMs, you can
                         limit the percentile value of models. List, possible 
@@ -513,8 +513,8 @@ class Climate(object):
         """ Get precipitation or temperature statistic derived from 'ensemble'
         data - ie. from all GCMs. 
 
-        :stat:          Single stat ID. See self.definitions['stat'].
-        :data_type:     Single type ID. See self.definitions['type'].
+        :stat:          Single stat ID. See ``self.definitions['stat']``.
+        :data_type:     Single type ID. See ``self.definitions['type']``.
         :locations:     Get data for list of ISO country codes and World Bank 
                         basin IDs.
         :sres:          Scenario ID - either 'a2' or 'b1'. If None, gets both.
