@@ -342,8 +342,9 @@ To get modelled data, use either ``get_precip_modelled()`` or
                             (2080, 'a2'): 1095.0342724610005,
                             (2080, 'b1'): 1105.12718994264}}}
 
-Each Climate API call requires some specific, irregular start date and end
-date pairs in the URL. There aren't many of them, so wbpy always returns all 
+Each Climate API modelled call requires some specific, irregular start date and 
+end date pairs in the URL. 
+There aren't many of them, so wbpy always returns all 
 possible dates. The metadata dictionary shows the start and 
 end dates for your results:
 
