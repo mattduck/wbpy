@@ -9,11 +9,22 @@ A Python interface to the World Bank Indicators and Climate APIs.
 Why use wbpy?
 -------------
 
+The Indicators API lets you access a large number of World Development
+Indicators - country data on education, environment, gender, health, poverty, 
+technology, etc. 
+
+The Climate API lets you access modelled and historical data for temperature
+and precipitation. 
+
+(See http://data.worldbank.org/developers for full API docs.)
+
+Some benefits:
+
 - Simple interface - no need to learn the different REST structures.
 - Data comes ready to use, separate from the associated
   metadata, and with all duplicate metadata removed.
 - API codes and definitions are accessible and searchable in Python.
-- Make multiple API calls with one method and get concatenated results.
+- One method call to get the equivalent data of several API calls.
 - Built-in cache to prevent excessive calls and improve performance. You can 
   plug in your own ``fetch(url)`` function.
 
@@ -94,11 +105,12 @@ you can pass the data straight in:
     2004  62701871  59867866  127761000
     2005  63175934  60224307  127773000
 
-The Indicators API has over 8000 indicator codes, but many of these have missing
-data. The ~1500 codes listed at 
-http://data.worldbank.org/indicator/all seem to have the best data coverage.
-To view those indicators, you can pass ``common_only=True`` to 
-``get_indicators()``:
+You can use ``get_indicators()`` to get a dictionary of indicator codes and 
+their descriptions. At default, this returns over 8000 codes, 
+many of which
+have missing data. Pass ``common_only=True`` to limit results to the ~1500 
+indicators listed at http://data.worldbank.org/indicator/all. These seem to
+have better data coverage. There are further ways to filter the indicators, eg:
 
 .. code-block:: python
 
@@ -108,10 +120,8 @@ To view those indicators, you can pass ``common_only=True`` to
                 topic=4, # 4 of those are under the 'Education' topic
                 )
 
-You can pass the results of any ``get_()`` methods to ``ind.print_codes()`` to 
-see a clear list of the result API codes, without all the other mess. If you're 
-using IPython, this should help work out what codes you want to pass to 
-``get_country_indicators()``:
+Pass the results to ``ind.print_codes()`` to print a clear list of the result's 
+API codes:
 
 .. code-block:: python
 
@@ -123,6 +133,24 @@ using IPython, this should help work out what codes you want to pass to
     SE.XPD.SECO.PC.ZS       Expenditure per student, secondary (% of GDP per capita)
     SE.XPD.TERT.PC.ZS       Expenditure per student, tertiary (% of GDP per capita)
     SE.XPD.TOTL.GD.ZS       Public spending on education, total (% of GDP)
+
+You might find ``print_codes()`` to be an easier way to view lists of `code` > 
+`name` mappings, as the results can otherwise contain a lot of extra text:
+
+.. code:: python
+
+    pprint(indicators['SE.XPD.TERT.PC.ZS'])
+
+.. parsed-literal::
+
+    {'name': 'Expenditure per student, tertiary (% of GDP per capita)',
+     'source': {'id': '2', 'value': 'World Development Indicators'},
+     'sourceNote': 'Public expenditure per pupil as a % of GDP per capita. Tertiary is the total public expenditure per student in tertiary education as a percentage of GDP per capita. Public expenditure (current and capital) includes government spending on educational institutions (both public and private), education administration as well as subsidies for private entities (students/households and other privates entities).',
+     'sourceOrganization': 'UNESCO Institute for Statistics',
+     'topics': [{'id': '4', 'value': 'Education '}]}
+
+There are a variety of ``get_()`` methods for different types of data - see 
+the Indicators class page for full method documentation.
 
 A `match` string can be passed to all Indicator methods to filter out
 non-matching keys / values. You can also call the method directly:
@@ -176,19 +204,13 @@ value.
 Any given kwarg that is not in the above list will be directly added to the query
 string.
 
-For full API documentation, see http://data.worldbank.org/developers/api-overview.
-
 Climate API
 ================================================================================
 
 Basic use
 ---------
 
-The Climate API can be used to get temperature and precipitation datasets. For
-full explanation of the data and associated models etc, see
-http://data.worldbank.org/developers/climate-data-api.
-
-To get historical and (somewhat) instrumental data, use either
+To get historical / instrumental data, use either
 ``get_precip_instrumental()`` or ``get_temp_instrumental()``:
 
 .. code-block:: python
@@ -234,8 +256,8 @@ To get historical and (somewhat) instrumental data, use either
              1990: 21.727072,
              2000: 21.741446}}
 
-Unlike the indicators API, the codes required to make calls are not accessible
-via the climate API itself. You can instead access codes and their definitions 
+Unlike the Indicators API, the codes required to make calls are not accessible
+via the Climate API itself. You can instead access codes and their definitions 
 via ``self.definitions``:
 
 .. code-block:: python
@@ -279,6 +301,9 @@ via ``self.definitions``:
               'manom': 'Average monthly change (anomaly)',
               'mavg': 'Monthly average'}}
 
+For full explanation of the data and associated models etc, see
+http://data.worldbank.org/developers/climate-data-api.
+
 To get modelled data, use either ``get_precip_modelled()`` or
 ``get_temp_modelled()``:
 
@@ -317,9 +342,10 @@ To get modelled data, use either ``get_precip_modelled()`` or
                             (2080, 'a2'): 1095.0342724610005,
                             (2080, 'b1'): 1105.12718994264}}}
 
-Each Climate API call requires some specific, irregular date pairs 
-(start / end). There aren't many of them, so wbpy always returns all possible
-dates. The metadata dictionary shows the start / end dates for your results:
+Each Climate API call requires some specific, irregular start date and end
+date pairs in the URL. There aren't many of them, so wbpy always returns all 
+possible dates. The metadata dictionary shows the start and 
+end dates for your results:
 
 .. code-block:: python
 
@@ -351,7 +377,6 @@ value for these is fixed as 'ensemble':
     data, metadata = cl.get_derived_stat(stat, data_type, locations)
     pprint(data)
     pprint(metadata)
-
 
 .. parsed-literal::
 
@@ -392,7 +417,6 @@ value for these is fixed as 'ensemble':
     to show a text definition of the IDs, because there isn't one (and I'm not
     aware of these IDs being standardised or defined elsewhere).
 
-
 .. note::
 
     The KML file calls for country and basin IDs are not currently supported. 
@@ -402,6 +426,8 @@ value for these is fixed as 'ensemble':
 
     There are no immediate plans to add the World Bank Finance and Project APIs.
     If there is interest, they can be added.
+
+See the Climate class page for full method documentation.
 
 Cache
 ================================================================================
