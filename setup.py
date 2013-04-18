@@ -10,7 +10,7 @@ setup(
     license="MIT",
     author="Matthew Duck",
     author_email="matt@mattduck.com",
-    description="A simpler interface to the World Bank APIs",
+    description="A Python interface to the World Bank Indicators and Climate APIs",
     long_description=open('README.rst').read(),
     url="https://github.com/mattduck/wbpy",
     packages=['wbpy'],

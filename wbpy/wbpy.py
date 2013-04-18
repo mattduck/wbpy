@@ -64,7 +64,7 @@ class Indicators(object):
     def __init__(self, cache=_fetch):
         """ A connection to the World Bank Indicators API.
 
-        self.cache can point to your own fetch(url) function, which takes a url 
+        self.fetch can point to your own fetch(url) function, which takes a url 
         and returns a web page as a string.
         """
         self.fetch = cache
@@ -79,7 +79,6 @@ class Indicators(object):
         :param indicator_codes:     Required list of metric codes.
         :param country_codes:       List of countries to get indicator data for. 
                                     If None, queries all countries.
-        :param match:               See ``match_data``.
         :param kwargs:              Language, date, mrv, gapfill, frequency.
         
         :returns:   Two dicts. The first contains the data, with nested keys: 
@@ -579,10 +578,6 @@ class Climate(object):
         # The actual API code is 'annualavg', etc.
         if data_type.startswith('a'):
             data_type = data_type.replace('a', 'annual', 1) 
-        try:
-            gcm = gcm.lower()
-        except AttributeError:
-            pass
 
         locations = [_convert_to_alpha3(code) for code in locations]
 
