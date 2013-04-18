@@ -143,7 +143,7 @@ API codes:
 You might find ``print_codes()`` to be an easier way to view lists of `code` > 
 `name` mappings, as the results can otherwise contain a lot of extra text:
 
-.. code:: python
+.. code-block:: python
 
     pprint(indicators['SE.XPD.TERT.PC.ZS'])
 
