@@ -1,14 +1,27 @@
 #!/usr/bin/env python
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
-setup(  name="wbpy",
-        version="0.2.0",
-        license="MIT",
-        description="A simpler interface to the World Bank APIs",
-        long_description=open('README.rst').read(),
-        author="Matthew Duck",
-        author_email="matt@mattduck.com",
-        url="https://github.com/mattduck/wbpy",
-        packages=['wbpy'],
-        install_requires=['pycountry'],
-     )
+setup(  
+    name="wbpy",
+    version="0.2.0",
+    license="MIT",
+    author="Matthew Duck",
+    author_email="matt@mattduck.com",
+    description="A simpler interface to the World Bank APIs",
+    long_description=open('README.rst').read(),
+    url="https://github.com/mattduck/wbpy",
+    packages=['wbpy'],
+    provides=['wbpy'],
+    install_requires=['pycountry'],
+    classifiers=['Development Status :: 3 - Alpha',
+                 'Intended Audience :: Developers', 
+                 'Intended Audience :: Science/Research', 
+                 'License :: OSI Approved :: MIT License',
+                 'Operating System :: OS Independent', 
+                 'Programming Language :: Python', 
+                 'Topic :: Scientific/Engineering', 
+                ]
+ )
