@@ -25,7 +25,7 @@ Basic use
 
 Connect to the Indicators API and get a time series:
 
-.. code:: python
+.. code-block:: python
 
     import wbpy
     from pprint import pprint
@@ -73,7 +73,7 @@ Data and metadata are separate, so you should be able to make use of the
 numbers without much further arranging. For example, if you use Pandas, 
 you can pass the data straight in:
 
-.. code:: python
+.. code-block:: python
 
     import pandas as pd
     
@@ -100,7 +100,7 @@ http://data.worldbank.org/indicator/all seem to have the best data coverage.
 To view those indicators, you can pass ``common_only=True`` to 
 ``get_indicators()``:
 
-.. code:: python
+.. code-block:: python
 
     indicators = ind.get_indicators(
                 match="GDP", # 199 indicators match "GDP"
@@ -111,7 +111,7 @@ To view those indicators, you can pass ``common_only=True`` to
 You can pass the results of any ``get_()`` method to ``ind.print_codes()`` to 
 see a clear list of the result API codes, without all the other mess:
 
-.. code:: python
+.. code-block:: python
 
     ind.print_codes(indicators)
 
@@ -125,7 +125,7 @@ see a clear list of the result API codes, without all the other mess:
 A `match` string can be passed to all Indicator methods to filter out
 non-matching keys / values. You can also call the method directly:
     
-.. code:: python
+.. code-block:: python
 
     print ind.match_data("public spending", indicators).keys()
 
@@ -189,7 +189,7 @@ http://data.worldbank.org/developers/climate-data-api.
 To get historical and (somewhat) instrumental data, use either
 ``get_precip_instrumental()`` or ``get_temp_instrumental()``:
 
-.. code:: python
+.. code-block:: python
 
     cl = wbpy.Climate()
     locations = ['AF', 'AU', 1, 100] # ISO codes or basin ID numbers
@@ -236,7 +236,7 @@ Unlike the indicators API, the codes required to make calls are not accessible
 via the climate API itself. You can instead access codes and their definitions 
 via ``self.definitions``:
 
-.. code:: python
+.. code-block:: python
 
     pprint(cl.definitions)
 
@@ -280,7 +280,7 @@ via ``self.definitions``:
 To get modelled data, use either ``get_precip_modelled()`` or
 ``get_temp_modelled()``:
 
-.. code:: python
+.. code-block:: python
 
     locations = ['GB']
     data_type = 'aavg' # Annual average
@@ -319,7 +319,7 @@ Each Climate API call requires some specific, irregular date pairs
 (start / end). There aren't many of them, so wbpy always returns all possible
 dates. The metadata dictionary shows the start / end dates for your results:
 
-.. code:: python
+.. code-block:: python
 
     pprint(metadata)
 
@@ -341,7 +341,7 @@ dates. The metadata dictionary shows the start / end dates for your results:
 You can also get statistics that are derived from the modelled data. The GCM
 value for these is fixed as 'ensemble':
 
-.. code:: python
+.. code-block:: python
 
     stat = 'ppt_days10' # No. of days with precipitation > 10mm
     data_type = 'aanom' # Average annual change (anomaly)
@@ -407,7 +407,7 @@ Cache
 The default cache function uses system temporary files. You can specify your own
 when instantiating an ``Indicators`` or ``Climate`` object:
 
-.. code:: python
+.. code-block:: python
 
     ind = wbpy.Indicators(cache=my_cache_func)
     cl = wbpy.Climate(cache=my_cache_func)
