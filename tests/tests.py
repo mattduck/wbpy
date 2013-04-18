@@ -171,7 +171,7 @@ class TestClimate(unittest.TestCase):
                 locations=['gb', 'JP'])
         self.assertTrue(md['sres'].has_key('a2'))
         self.assertTrue(md['sres'].has_key('b1'))
-        self.assertTrue(md['type'] == c.definitions['type']['aanom'])
+        self.assertTrue(md['stat'] == c.definitions['stat']['tmin_days10th'])
 
     def test_ensemble_percentile_arg_filters(self):
         c = wbpy.Climate()
