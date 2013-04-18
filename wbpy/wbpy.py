@@ -401,8 +401,8 @@ class Climate(object):
             type=dict(
                 mavg="Monthly average",
                 aavg="Annual average",
-                manom="Average monthly change (anomaly)",
-                aanom="Average annual change (anomaly)",
+                manom="Average monthly change (anomaly).",
+                aanom="Average annual change (anomaly).",
                 ),
             stat=dict(
                 tmin_means="Average daily minimum temperature, Celsius",
@@ -442,8 +442,7 @@ class Climate(object):
                 inmcm3_0="INMCM3.0",
                 ukmo_hadcm3="UKMO HadCM3",
                 ukmo_hadgem1="UKMO HadGEM3",
-                ensemble="x Percentile values of all models together,  "\
-                         "for both A2 and B1 scenarios",
+                ensemble="x Percentile values of all models together",
                 ),
             sres=dict(
                 a2="A2 Scenario",
@@ -457,6 +456,8 @@ class Climate(object):
             tas="Temperature, in degrees Celsisus",
             annualavg=self.definitions['type']['aavg'],
             annualanom=self.definitions['type']['aanom'],
+            anom_cp="The control period is 1961 - 1999.",
+            anom_cp_stat="The control period is 1961 - 2000.",
             )
 
     def get_precip_instrumental(self, locations, interval="year"):
@@ -607,6 +608,14 @@ class Climate(object):
             metadata['type'] = self.definitions['type'][data_type.lower()]
         except KeyError:
             metadata['type'] = self._definitions[data_type.lower()]
+
+        # Stats have a different control period to pr and tas for manom and
+        # aanom data.
+        if 'anom' in data_type:
+            if var in ['tas', 'pr']:
+                metadata['type'] += " " + self._definitions['anom_cp']
+            else:
+                metadata['type'] += " " + self._definitions['anom_cp_stat']
 
         # Ensemble and other modelled calls split into different methods, 
         # as have different url and response structures, and it messy having

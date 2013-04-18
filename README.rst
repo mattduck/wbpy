@@ -1,7 +1,7 @@
 wbpy
 ================================================================================
 
-A simple interface to the World Bank Indicators and Climate APIs.
+A Python interface to the World Bank Indicators and Climate APIs.
 
 :Full docs:  http://wbpy.readthedocs.org/en/latest
 :Source:     http://github.com/mattduck/wbpy 
