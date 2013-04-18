@@ -108,8 +108,10 @@ To view those indicators, you can pass ``common_only=True`` to
                 topic=4, # 4 of those are under the 'Education' topic
                 )
 
-You can pass the results of any ``get_()`` method to ``ind.print_codes()`` to 
-see a clear list of the result API codes, without all the other mess:
+You can pass the results of any ``get_()`` methods to ``ind.print_codes()`` to 
+see a clear list of the result API codes, without all the other mess. If you're 
+using IPython, this should help work out what codes you want to pass to 
+``get_country_indicators()``:
 
 .. code-block:: python
 
