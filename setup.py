@@ -6,7 +6,7 @@ except ImportError:
 
 setup(  
     name="wbpy",
-    version="0.2.0",
+    version="0.2.1",
     license="MIT",
     author="Matthew Duck",
     author_email="matt@mattduck.com",

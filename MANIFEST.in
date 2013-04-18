@@ -1,0 +1,4 @@
+include *.rst *.txt LICENSE
+graft tests
+graft docs
+prune docs/_*
