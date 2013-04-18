@@ -28,6 +28,12 @@ Some benefits:
 - Built-in cache to prevent excessive calls and improve performance. You can 
   plug in your own ``fetch(url)`` function.
 
+Install
+-------
+
+``pip install wbpy``, or download from source.
+
+
 Indicators API
 ================================================================================
 
