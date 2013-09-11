@@ -66,7 +66,7 @@ class TestIndicators(unittest.TestCase):
         def test_fetch(url):
             return urllib2.urlopen(url).read()
 
-        ind = wbpy.Indicators(cache=test_fetch)
+        ind = wbpy.Indicators(fetch=test_fetch)
         data = ind.get_topics()
         self.assertTrue(data.values()[1].has_key('sourceNote'))
 
@@ -105,7 +105,7 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_indicators(common_only=True)
         self.assertTrue(len(data) > 500)
 
-    def test_that_keys_get_searched_as_well_as_values(self):
+    def test_that_default_search_is_of_keys_and_not_values(self):
         ind = wbpy.Indicators()
         data = ind.get_sources(search="11") # 11 is a key, and not in the value
 
@@ -173,6 +173,34 @@ class TestIndicators(unittest.TestCase):
         results = ind.search_results("hope.+match", data)
         self.assertTrue("foo" in results.keys())
         self.assertFalse("bar" in results.keys())
+
+    def test_search_results_takes_key(self):
+        ind = wbpy.Indicators()
+        data = ind.get_topics()
+
+        results = ind.search_results("poverty", data, key="value")
+        self.assertTrue(results.has_key("11")) # Code for Poverty topic
+        self.assertEqual(len(results.keys()), 1)
+
+        results = ind.search_results("poverty", data)
+        self.assertGreater(len(results.keys()), 1)
+
+    def test_search_full_flag_filters_descriptions(self):
+        ind = wbpy.Indicators()
+
+        # By default, should only be searching the name of the country
+        data = ind.get_countries(search="america")
+        for v in data.values():
+            self.assertIn("america", v["name"].lower())
+        default_len = len(data)
+
+        # When full, should be searching the values too
+        data = ind.get_countries(search="america", search_full=True)
+        for v in data.values():
+            self.assertIn("america", str(v).lower())
+        full_len = len(data)
+
+        self.assertGreater(full_len, default_len)
 
 
 class TestClimate(unittest.TestCase):
