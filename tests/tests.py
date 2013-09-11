@@ -45,11 +45,18 @@ class TestIndicators(unittest.TestCase):
 
     def test_get_country_indicators_returns_data_and_metadata_dicts(self):
         ind = wbpy.Indicators()
-        data, md = ind.get_country_indicators(['SP.POP.TOTL'], ['GB'], date=2010)
-        self.assertIsNotNone(data)
-        self.assertIsNotNone(md)
+        results = ind.get_country_indicators(['SP.POP.TOTL'], ['GB', "US"], date=2010)
+
+        self.assertEqual(len(results.indicators), 1)
+        self.assertEqual(results.indicators.keys(), ["SP.POP.TOTL"])
+        self.assertIn("population", results.indicators.values()[0].lower())
+
+        self.assertEqual(len(results.countries), 2)
+        self.assertEqual(results.countries.keys(), ["GB", "US"])
+        self.assertTrue("united states" in results.countries["US"].lower())
+
         try:
-            val = data['SP.POP.TOTL']['GB']['2010']
+            val = results.data['SP.POP.TOTL']['GB']['2010']
             assert True
         except KeyError:
             assert False
@@ -74,8 +81,8 @@ class TestIndicators(unittest.TestCase):
 
     def test_no_print_exceptions_for_indicators_data_metadata(self):
         ind = wbpy.Indicators()
-        data, md = ind.get_country_indicators(['SP.POP.TOTL'])
-        ind.print_codes(md)
+        results = ind.get_country_indicators(['SP.POP.TOTL'])
+        ind.print_codes(results.data)
         assert True
 
     def test_no_utf8_errors_when_printing_all_indicators(self):
@@ -113,9 +120,10 @@ class TestIndicators(unittest.TestCase):
 
     def test_print_codes_func_handles_get_country_indicators_func(self):
         ind = wbpy.Indicators()
-        data, metadata = ind.get_country_indicators(["SP.POP.TOTL"])
-        ind.print_codes(data)
-        ind.print_codes(metadata)
+        results = ind.get_country_indicators(["SP.POP.TOTL"])
+        ind.print_codes(results.data)
+        ind.print_codes(results.indicators)
+        ind.print_codes(results.countries)
         assert True
 
     def test_print_codes_func_handles_get_income_levels_func(self):

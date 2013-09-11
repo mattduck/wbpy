@@ -7,6 +7,7 @@ import md5
 import tempfile
 import re
 import numbers
+from collections import namedtuple
 try: 
     import simplejson as json
 except ImportError: 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 def _fetch(url):
     """ Temp file cache, keeps pages for a day. """
     one_day_old = 60*60*24
-    cache_dir = os.path.join(tempfile.gettempdir(), 'wbpy')
+    cache_dir = os.path.join(tempfile.gettempdir(), "wbpy")
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
         logger.debug("Created cache directory " + cache_dir)
@@ -32,7 +33,7 @@ def _fetch(url):
     logger.debug("URL not found in cache. Getting web page...")
     web_page = urllib2.urlopen(url).read()
     fd, tempname = tempfile.mkstemp()
-    fp = os.fdopen(fd, 'w')
+    fp = os.fdopen(fd, "w")
     fp.write(web_page)
     fp.close()
     os.rename(tempname, cache_path)
@@ -59,6 +60,11 @@ def _convert_to_alpha3(code):
             return pycountry.countries.get(alpha3=code).alpha3
     except (KeyError, AttributeError):
         return code
+
+
+_CountryIndicatorsTuple = namedtuple("WorldBankCountryIndicators", 
+    ["data", "indicators", "countries"])
+
 
 class Indicators(object):
     def __init__(self, cache=_fetch):
@@ -100,22 +106,29 @@ class Indicators(object):
             response_data += self._get_api_response_as_json(url)
 
         # Arrange JSON data to be more accessible.
-        results = {}
-        metadata = {}
+        data = {}
+        indicator_metadata = {}
+        country_metadata = {}
         for dataset in response_data:
-            country_id = dataset['country']['id']
-            indicator_id = dataset['indicator']['id']
-            date = dataset['date']
-            if indicator_id not in results:
-                results[indicator_id] = {}
-            if country_id not in results[indicator_id]:
-                results[indicator_id][country_id] = {}
-            if date not in results[indicator_id][country_id]:
-                results[indicator_id][country_id][date] = dataset['value']
+            country_id = dataset["country"]["id"]
+            indicator_id = dataset["indicator"]["id"]
+            date = dataset["date"]
 
-            if indicator_id not in metadata:
-                metadata[indicator_id] = dataset['indicator']['value']
-        return results, metadata
+            if indicator_id not in data:
+                data[indicator_id] = {}
+            if country_id not in data[indicator_id]:
+                data[indicator_id][country_id] = {}
+            if date not in data[indicator_id][country_id]:
+                data[indicator_id][country_id][date] = dataset["value"]
+
+            if indicator_id not in indicator_metadata:
+                indicator_metadata[indicator_id] = dataset["indicator"]["value"]
+
+            if country_id not in country_metadata:
+                country_metadata[country_id] = dataset["country"]["value"]
+
+        return _CountryIndicatorsTuple(data, indicator_metadata,
+            country_metadata)
 
     def get_indicators(self, indicator_codes=None, search=None,
             common_only=False, **kwargs):
@@ -286,34 +299,34 @@ class Indicators(object):
         endpoint, eg. "incomeLevel?", or "lendingType?key=val".
         """
         kwargs = {k.lower(): v for k, v in kwargs.items()}
-        assert not (kwargs.has_key('topic') and kwargs.has_key('source'))
+        assert not (kwargs.has_key("topic") and kwargs.has_key("source"))
 
         # Fix any API options that shouldn't be accessible via wbpy.
-        fixed_options = {'format': 'json', 'per_page': '10000'}
-        banned_options = ['page']
+        fixed_options = {"format": "json", "per_page": "10000"}
+        banned_options = ["page"]
         kwargs.update(fixed_options) 
         for k in banned_options:
             if k in kwargs.keys():
                 del(kwargs[k])
 
         # If no dates given, use most recent value
-        if all(key not in kwargs.keys() for key in ['mrv', 'date']):
-            kwargs['mrv'] = 1
+        if all(key not in kwargs.keys() for key in ["mrv", "date"]):
+            kwargs["mrv"] = 1
 
         # Some options are part of the url structure.
         options = []
-        if 'source' in kwargs.keys():
+        if "source" in kwargs.keys():
             rest_url = "".join(["source/", str(kwargs["source"]), "/", 
                                 rest_url])
-            del(kwargs['source'])
-        if 'topic' in kwargs.keys():
+            del(kwargs["source"])
+        if "topic" in kwargs.keys():
             rest_url = "".join(["topic/", str(kwargs["topic"]), "/", 
                                 rest_url])
-            del(kwargs['topic'])
+            del(kwargs["topic"])
         # Prepend language last, as it should be at front of url.
-        if 'language' in kwargs.keys(): 
-            rest_url = "{}/".format(kwargs['language']) + rest_url
-            del(kwargs['language'])
+        if "language" in kwargs.keys(): 
+            rest_url = "{}/".format(kwargs["language"]) + rest_url
+            del(kwargs["language"])
 
         # Other options can be passed to the query string,
         # with numbers / lists converted to the right format for the url.
@@ -324,7 +337,7 @@ class Indicators(object):
                 v = ";".join([str(x) for x in v]) 
             options.append(u"{0}={1}".format(k, v))
 
-        query_string = '&'.join(options)
+        query_string = "&".join(options)
         new_url = "".join([self.base_url, rest_url, query_string])
         return new_url
 
@@ -336,8 +349,8 @@ class Indicators(object):
         json_data = json.loads(web_page)
         header = json_data[0]
         content = json_data[1]
-        current_page = header['page']
-        if current_page < header['pages']:
+        current_page = header["page"]
+        if current_page < header["pages"]:
             next_page = url + "&page={0}".format(current_page + 1)
             content += self._get_api_response_as_json(next_page)
         return content
@@ -449,8 +462,8 @@ class Climate(object):
             pr="Precipitation (rainfall and assumed water equvialent) in "\
                "millimeters",
             tas="Temperature, in degrees Celsisus",
-            annualavg=self.definitions['type']['aavg'],
-            annualanom=self.definitions['type']['aanom'],
+            annualavg=self.definitions["type"]["aavg"],
+            annualanom=self.definitions["type"]["aanom"],
             anom_cp="The control period is 1961 - 1999.",
             anom_cp_stat="The control period is 1961 - 2000.",
             )
@@ -528,7 +541,7 @@ class Climate(object):
         """
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, 
-                ensemble_percentiles=ensemble_percentiles, gcm=['ensemble'])
+                ensemble_percentiles=ensemble_percentiles, gcm=["ensemble"])
 
     def _get_instrumental(self, var, locations, interval="year"):
         # Construct URLs
@@ -554,15 +567,15 @@ class Climate(object):
             results[loc] = {}
             for data in response:
                 # The response has different keys depending on the interval
-                if interval == 'month':
+                if interval == "month":
                     # + 1 to month as it uses keys 0-11, unless I missing some
                     # standard I think 1-12 more sensible.
-                    results[loc][data['month'] + 1] = data['data']
+                    results[loc][data["month"] + 1] = data["data"]
                 else:
-                    results[loc][data['year']] = data['data']
+                    results[loc][data["year"]] = data["data"]
         metadata = {}
-        metadata['stat'] = self._definitions[var] # pr or tas
-        metadata['interval'] = interval
+        metadata["stat"] = self._definitions[var] # pr or tas
+        metadata["interval"] = interval
         return results, metadata
 
     def _get_modelled(self, var, data_type, locations, gcm=None,
@@ -572,53 +585,53 @@ class Climate(object):
         """
         # You can input 'aavg', 'aanom', to go w/ the proper 'mavg', 'manom'.
         # The actual API code is 'annualavg', etc.
-        if data_type.startswith('a'):
-            data_type = data_type.replace('a', 'annual', 1) 
+        if data_type.startswith("a"):
+            data_type = data_type.replace("a", "annual", 1) 
 
         locations = [_convert_to_alpha3(code) for code in locations]
 
         # Info dict can be arranged from input
         metadata = {}
-        metadata['gcm'] = {}
+        metadata["gcm"] = {}
         if gcm:
             for model in gcm: 
-                metadata['gcm'][model.lower()] = \
-                    self.definitions['gcm'][model.lower()]
+                metadata["gcm"][model.lower()] = \
+                    self.definitions["gcm"][model.lower()]
         else:
-            metadata['gcm'] = self.definitions['gcm'].copy()
-            del(metadata['gcm']['ensemble'])
+            metadata["gcm"] = self.definitions["gcm"].copy()
+            del(metadata["gcm"]["ensemble"])
         if sres:
-            metadata['sres'] = self.definitions['sres'][sres.lower()]
+            metadata["sres"] = self.definitions["sres"][sres.lower()]
         else:
-            metadata['sres'] = self.definitions['sres']
+            metadata["sres"] = self.definitions["sres"]
         try:
-            metadata['stat'] = self.definitions['stat'][var.lower()]
+            metadata["stat"] = self.definitions["stat"][var.lower()]
         except KeyError:
-            metadata['stat'] = self._definitions[var] # pr or tas
+            metadata["stat"] = self._definitions[var] # pr or tas
         try:
-            metadata['type'] = self.definitions['type'][data_type.lower()]
+            metadata["type"] = self.definitions["type"][data_type.lower()]
         except KeyError:
-            metadata['type'] = self._definitions[data_type.lower()]
+            metadata["type"] = self._definitions[data_type.lower()]
 
         # Stats have a different control period to pr and tas for manom and
         # aanom data.
-        if 'anom' in data_type:
-            if var in ['tas', 'pr']:
-                metadata['type'] += " " + self._definitions['anom_cp']
+        if "anom" in data_type:
+            if var in ["tas", "pr"]:
+                metadata["type"] += " " + self._definitions["anom_cp"]
             else:
-                metadata['type'] += " " + self._definitions['anom_cp_stat']
+                metadata["type"] += " " + self._definitions["anom_cp_stat"]
 
         # Ensemble and other modelled calls split into different methods, 
         # as have different url and response structures, and it messy having
         # having one function with lots of clauses etc.
         results = {}
-        metadata['dates'] = {}
-        if gcm and 'ensemble' in gcm:
+        metadata["dates"] = {}
+        if gcm and "ensemble" in gcm:
             results, dates = self._get_modelled_ensemble(var=var, 
                          data_type=data_type, locations=locations, 
                          sres=sres, ensemble_percentiles=ensemble_percentiles)
             for fr, to in dates:
-                metadata['dates'][fr] = to
+                metadata["dates"][fr] = to
         try:
             more_gcms_given = len(gcm) > 1    
         except TypeError:
@@ -628,7 +641,7 @@ class Climate(object):
                                  data_type=data_type, locations=locations, 
                                  sres=sres, gcm=gcm)
             for fr, to in dates:
-                metadata['dates'][fr] = to
+                metadata["dates"][fr] = to
             results.update(gcm_results) # Dicts won't have same top-level keys
         return results, metadata
 
@@ -641,9 +654,9 @@ class Climate(object):
             for loc in locations:
                 try:
                     int(loc) # basin ids are ints
-                    loc_type = 'basin'
+                    loc_type = "basin"
                 except ValueError:
-                    loc_type = 'country'
+                    loc_type = "country"
                 rest_url = "v1/{0}/{1}/{2}/{3}/{4}/{5}".format(
                         loc_type, data_type,
                         var, start_date, end_date, loc)
@@ -658,26 +671,26 @@ class Climate(object):
             response = json.loads(self.fetch(url))
             for data in response:
                 # L1 - GCM
-                if data.has_key('gcm'):
-                    gcm_key = data['gcm']
+                if data.has_key("gcm"):
+                    gcm_key = data["gcm"]
                 if gcm_key not in results:
                     results[gcm_key] = {}
                 # L2 - Location
                 if loc not in results[gcm_key]:
                     results[gcm_key][loc] = {}
                 # L3 - year / scenario
-                time = data['fromYear']
-                dates.append((time, data['toYear']))
-                if data.has_key('scenario'):
-                    time = (time, data['scenario'])
+                time = data["fromYear"]
+                dates.append((time, data["toYear"]))
+                if data.has_key("scenario"):
+                    time = (time, data["scenario"])
                 if time not in results[gcm_key][loc]:
                     results[gcm_key][loc][time] = {}
                 # L4 - values / months, depending on the result
-                if data.has_key('monthVals'):
-                    for i, val in enumerate(data['monthVals'], 1):
+                if data.has_key("monthVals"):
+                    for i, val in enumerate(data["monthVals"], 1):
                         results[gcm_key][loc][time][i] = val
-                elif data.has_key('annualData'):
-                    results[gcm_key][loc][time] = data['annualData'][0]
+                elif data.has_key("annualData"):
+                    results[gcm_key][loc][time] = data["annualData"][0]
 
         # If sres or gcm values given, filter out unwanted
         # results. Best to get data in small no. of calls and to take out
@@ -705,7 +718,7 @@ class Climate(object):
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
             ensemble_percentiles=None):
-        if var not in ['pr', 'tas']:
+        if var not in ["pr", "tas"]:
             # Then assume it's a stat. Stat directly replaces the var API arg.
             valid_dates = self._valid_stat_dates
         else:
@@ -717,9 +730,9 @@ class Climate(object):
             for loc in locations:
                 try:
                     int(loc) # basin ids are ints
-                    loc_type = 'basin'
+                    loc_type = "basin"
                 except ValueError:
-                    loc_type = 'country'
+                    loc_type = "country"
                 rest_url = "v1/{0}/{1}/ensemble/{2}/{3}/{4}/{5}".format(
                         loc_type, data_type, var, start_date, end_date, loc)
                 full_url = "".join([self.base_url, rest_url, ".json"])
@@ -733,25 +746,25 @@ class Climate(object):
             response = json.loads(self.fetch(url))
             for data in response:
                 # L1 - percentile
-                gcm_key = ('ensemble', data['percentile'])
+                gcm_key = ("ensemble", data["percentile"])
                 if gcm_key not in results:
                     results[gcm_key] = {}
                 # L2 - Location
                 if loc not in results[gcm_key]:
                     results[gcm_key][loc] = {}
                 # L3 - year / scenario
-                time = data['fromYear']
-                dates.append((time, data['toYear']))
-                if data.has_key('scenario'):
-                    time = (time, data['scenario'])
+                time = data["fromYear"]
+                dates.append((time, data["toYear"]))
+                if data.has_key("scenario"):
+                    time = (time, data["scenario"])
                 if time not in results[gcm_key][loc]:
                     results[gcm_key][loc][time] = {}
                 # L4 - values / months, depending on the result
-                if data.has_key('monthVals'):
-                    for i, val in enumerate(data['monthVals'], 1):
+                if data.has_key("monthVals"):
+                    for i, val in enumerate(data["monthVals"], 1):
                         results[gcm_key][loc][time][i] = val
-                elif data.has_key('annualVal'):
-                    results[gcm_key][loc][time] = data['annualVal'][0]
+                elif data.has_key("annualVal"):
+                    results[gcm_key][loc][time] = data["annualVal"][0]
 
         # Filter unwanted
         if ensemble_percentiles:
