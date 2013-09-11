@@ -30,7 +30,7 @@ class TestIndicators(unittest.TestCase):
         
     def test_get_regions_returns_regions(self):
         ind = wbpy.Indicators()
-        data = ind.get_regions(match="Latin")
+        data = ind.get_regions(search="Latin")
         self.assertTrue(all(['latin' in v['name'].lower() for v in data.values()]))
 
     def test_get_indicators_returns_indicators(self):
@@ -98,10 +98,12 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_indicators(common_only=True)
         self.assertTrue(len(data) > 500)
 
-    def test_that_keys_get_matched_as_well_as_values(self):
+    def test_that_keys_get_searched_as_well_as_values(self):
         ind = wbpy.Indicators()
-        data = ind.get_sources(match="11") # 11 is a key, and not in the value
-        self.assertIn("11", [str(x) for x in data.keys()])
+        data = ind.get_sources(search="11") # 11 is a key, and not in the value
+
+        self.assertIn("11", data.keys())
+        self.assertEqual(len(data), 1)
 
     def test_print_codes_func_handles_get_countries_func(self):
         ind = wbpy.Indicators()
@@ -151,6 +153,18 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_topics()
         ind.print_codes(data)
         assert True
+
+    def test_search_results_takes_regexp(self):
+        # Check that case is ignored too
+        ind = wbpy.Indicators()
+        data = dict(
+            foo="I hope this one will MATCH",
+            bar="This one will not match, I hope",
+            )
+
+        results = ind.search_results("hope.+match", data)
+        self.assertTrue("foo" in results.keys())
+        self.assertFalse("bar" in results.keys())
 
 
 class TestClimate(unittest.TestCase):

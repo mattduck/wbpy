@@ -117,7 +117,7 @@ class Indicators(object):
                 metadata[indicator_id] = dataset['indicator']['value']
         return results, metadata
 
-    def get_indicators(self, indicator_codes=None, match=None,
+    def get_indicators(self, indicator_codes=None, search=None,
             common_only=False, **kwargs):
         """ Make call to retrieve indicator codes and information.
 
@@ -127,13 +127,13 @@ class Indicators(object):
                                 coverage.  If True, filters out those 
                                 indicators that do not appear on the 
                                 main website (leaving ~1500).
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language, source, topic.
         
         :returns:   Dict of indicators, using ID codes as keys.
         """
         results = self._get_indicator_data(indicator_codes, 
-                rest_url="indicator", response_key="id", match=match, **kwargs)
+                rest_url="indicator", response_key="id", search=search, **kwargs)
         if common_only == True:
             page = self.fetch("http://data.worldbank.org/indicator/all")
             ind_codes = re.compile("(?<=http://data.worldbank.org/indicator/)"\
@@ -152,13 +152,13 @@ class Indicators(object):
         else:
             return results
 
-    def get_countries(self, country_codes=None, match=None, **kwargs):
+    def get_countries(self, country_codes=None, search=None, **kwargs):
         """ Get info on countries, eg. ISO codes,
         longitude/latitude, capital city, income level, etc.
 
         :param country_code:    List of 2 or 3 letter ISO codes. If None, 
                                 queries all.
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language, incomeLevel, lendingType, region.
 
         :returns:   Dict of countries using 2-letter ISO codes as keys.
@@ -166,84 +166,84 @@ class Indicators(object):
         if country_codes:
             country_codes = [_convert_to_alpha3(code) for code in country_codes]
         return self._get_indicator_data(country_codes, rest_url="country",
-                match=match, response_key="iso2Code", **kwargs)
+                search=search, response_key="iso2Code", **kwargs)
 
-    def get_income_levels(self, income_codes=None, match=None, **kwargs):
+    def get_income_levels(self, income_codes=None, search=None, **kwargs):
         """ Get income categories.
 
         :param income_codes:    List of 3-letter ID codes. If None, queries all 
                                 (~10). 
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language
 
         :returns:   Dict of income levels using ID codes as keys.
         """
         return self._get_indicator_data(income_codes, rest_url="incomelevel", 
-                response_key="id", match=match, **kwargs)
+                response_key="id", search=search, **kwargs)
 
-    def get_lending_types(self, lending_codes=None, match=None, **kwargs):
+    def get_lending_types(self, lending_codes=None, search=None, **kwargs):
         """ Get lending type categories. 
 
         :param lending_codes:   List of lending codes. If None, queries all (4).
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language
 
         :returns:   Dict of lending types using ID codes as keys.
         """
         return self._get_indicator_data(lending_codes, rest_url="lendingtype",
-                response_key="id", match=match, **kwargs)
+                response_key="id", search=search, **kwargs)
 
-    def get_regions(self, region_codes=None, match=None, **kwargs):
+    def get_regions(self, region_codes=None, search=None, **kwargs):
         """ Get wider region names and codes. 
 
         :param region_codes:    List of 3-letter codes. If None, queries all 
                                 (~26).
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language
                         
         :returns:   Dict of regions, using ID codes as keys.
         """
         return self._get_indicator_data(region_codes, rest_url="region", 
-                response_key="code", match=match, **kwargs)
+                response_key="code", search=search, **kwargs)
 
-    def get_topics(self, topic_codes=None, match=None, **kwargs):
+    def get_topics(self, topic_codes=None, search=None, **kwargs):
         """ Get Indicators topics. All indicators are mapped 
         to a topic, eg. Health, Private Sector. You can use the topic id as a
         filtering arg to ``get_indicators``. 
 
         :param topic_codes: List of topic IDs. If None, queries all (~20).
-        :param match:       See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:      Language
 
         :returns:   Dict of topics usings ID numbers as keys.
         """
         return self._get_indicator_data(topic_codes, rest_url="topic", 
-                response_key="id", match=match, **kwargs)
+                response_key="id", search=search, **kwargs)
 
-    def get_sources(self, source_codes=None, match=None, **kwargs):
+    def get_sources(self, source_codes=None, search=None, **kwargs):
         """ Get source info for the Indicators data .You can use the source id
         as a filtering arg to ``get_indicators``. (At time of
         writing, the API only returns source names, not the descriptions and
         URLs visible in the official documentation). 
 
         :param source_codes:    List of source IDs. If None, queries all (~27).
-        :param match:           See ``match_data``.
+        :param search:          Regexp string to return matching results.
         :param kwargs:          Language
 
         :returns:   Dict of sources using ID numbers as keys.
         """
         return self._get_indicator_data(source_codes, rest_url="source", 
-                response_key="id", match=match, **kwargs)
+                response_key="id", search=search, **kwargs)
 
-    def print_codes(self, results, match=None):
+    def print_codes(self, results, search=None):
         """ Print formatted list of API IDs and their corresponding values.
         
         :results:       A dictionary that was returned by one of the ``get``
                         functions.
-        :param match:   See ``match_data``.
+        :param search:          Regexp string to return matching results.
         """
-        if match:
-            results = self.match_data(match, results)
+        if search:
+            results = self.search_results(search, results)
 
         # Natural sort the result keys for nicer print order
         def try_int(text):
@@ -261,23 +261,21 @@ class Indicators(object):
             print u"{:30} {}".format(k, main_value)
 
 
-    def match_data(self, ss, results):
-        """ For a given dict (eg. of ``get`` results), filter out all 
-        keys that do not contain the match string in the value.
-        (``get`` results mostly include the key as one of the value
-        fields, so the key is searched implicitly). 
+    def search_results(self, regexp, results):
+        """ For a given dict of ``get_`` results, filter out all keys that do
+        not match the given regexp in either the key or the value. The search
+        is *not case sensitive*.
 
-        :param ss:      The match string. You can pass a `match` param to other 
-                        functions as a shorthand for filtering the data through 
-                        this method.
-        :param results: A dict. 
+        :regexp:        The regexp string, passed to ``re.search``.
+        :results:       A dictionary of ``get_`` results.
 
-        :returns:   The input dict, with the non-matching keys filtered out.
+        :returns:       The input dictionary, with non-matching keys removed.
         """
-        ss = ss.lower()
+        compiled_re = re.compile(regexp, flags=re.IGNORECASE)
         search_matches = {}
         for k, v in results.items():
-            if ss in  u"{0} {1}".format(k, v).lower():
+            row_string = u"{0} {1}".format(k, v)
+            if compiled_re.search(row_string):
                 search_matches[k] = v
         return search_matches
 
@@ -344,7 +342,7 @@ class Indicators(object):
             content += self._get_api_response_as_json(next_page)
         return content
 
-    def _get_indicator_data(self, api_ids, rest_url, response_key, match=None, 
+    def _get_indicator_data(self, api_ids, rest_url, response_key, search=None, 
                             **kwargs):
         """ 
         :param api_ids:         API codes for the indicator, eg. if calling a 
@@ -364,13 +362,14 @@ class Indicators(object):
             url = "{0}?".format(rest_url)
         url = self._generate_indicators_url(url, **kwargs)
         world_bank_response = self._get_api_response_as_json(url)
-        tidier_data = {}
+        filtered_data = {}
         for data in world_bank_response:
-            tidier_data[data[response_key]] = data
+            filtered_data[data[response_key]] = data
             del(data[response_key]) # No point duplicating in both key and val
-        if match:
-            tidier_data = self.match_data(match, tidier_data)
-        return tidier_data
+        if search:
+            filtered_data = self.search_results(search, filtered_data)
+        return filtered_data
+
 
 class Climate(object):
     def __init__(self, cache=_fetch):
