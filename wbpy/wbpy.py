@@ -67,13 +67,14 @@ _CountryIndicatorsTuple = namedtuple("WorldBankCountryIndicators",
 
 
 class Indicators(object):
-    def __init__(self, cache=_fetch):
+    def __init__(self, fetch=_fetch):
         """ A connection to the World Bank Indicators API.
 
-        self.fetch can point to your own fetch(url) function, which takes a url 
-        and returns a web page as a string.
+        You can override the default tempfile cache by passing a ``fetch`` 
+        function, which fetches a url and returns a string. ``self.fetch`` can
+        also be set after instantiation.
         """
-        self.fetch = cache
+        self.fetch = fetch
         self.base_url = "http://api.worldbank.org/"
 
     # ========== PUBLIC METHODS =========
@@ -83,9 +84,19 @@ class Indicators(object):
         """ Get indicator metrics for countries.
 
         :param indicator_codes:     Required list of metric codes.
-        :param country_codes:       List of countries to get indicator data for. 
-                                    If None, queries all countries.
-        :param kwargs:              Language, date, mrv, gapfill, frequency.
+
+        :param country_codes:   List of countries to get indicator data for. 
+                                If None, queries all countries.
+
+        :param kwargs:      These map directly to the API query args:
+                            *Language*, 
+                            *date*, 
+                            *mrv*, 
+                            *gapfill*, 
+                            *frequency*.
+
+        :returns:   Namedtuple with the following attrs:
+                    *data* - the data, organising by indicato
         
         :returns:   Two dicts. The first contains the data, with nested keys: 
                     `Indicator code > ISO 2-digit country code > Date > Value`. 
@@ -136,12 +147,18 @@ class Indicators(object):
 
         :param indicator_codes: List of codes, eg. SP.POP.TOTL for population.
                                 If None, queries all (~8000).
+
         :param common_only:     Many of the indicators do not have wide country 
                                 coverage.  If True, filters out those 
                                 indicators that do not appear on the 
-                                main website (leaving ~1500).
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language, source, topic.
+                                main World Bank website (leaving ~1500).
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*,
+                            *source*,
+                            *topic*.
         
         :returns:   Dict of indicators, using ID codes as keys.
         """
@@ -166,13 +183,19 @@ class Indicators(object):
             return results
 
     def get_countries(self, country_codes=None, search=None, **kwargs):
-        """ Get info on countries, eg. ISO codes,
-        longitude/latitude, capital city, income level, etc.
+        """ Get info on countries, eg. ISO codes, longitude/latitude, capital
+        city, income level, etc.
 
         :param country_code:    List of 2 or 3 letter ISO codes. If None, 
                                 queries all.
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language, incomeLevel, lendingType, region.
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*,
+                            *incomeLevel*,
+                            *lendingType*,
+                            *region*.
 
         :returns:   Dict of countries using 2-letter ISO codes as keys.
         """
@@ -186,8 +209,11 @@ class Indicators(object):
 
         :param income_codes:    List of 3-letter ID codes. If None, queries all 
                                 (~10). 
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*.
 
         :returns:   Dict of income levels using ID codes as keys.
         """
@@ -198,8 +224,11 @@ class Indicators(object):
         """ Get lending type categories. 
 
         :param lending_codes:   List of lending codes. If None, queries all (4).
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*.
 
         :returns:   Dict of lending types using ID codes as keys.
         """
@@ -211,8 +240,11 @@ class Indicators(object):
 
         :param region_codes:    List of 3-letter codes. If None, queries all 
                                 (~26).
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*.
                         
         :returns:   Dict of regions, using ID codes as keys.
         """
@@ -225,8 +257,11 @@ class Indicators(object):
         filtering arg to ``get_indicators``. 
 
         :param topic_codes: List of topic IDs. If None, queries all (~20).
-        :param search:          Regexp string to return matching results.
-        :param kwargs:      Language
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*.
 
         :returns:   Dict of topics usings ID numbers as keys.
         """
@@ -240,8 +275,11 @@ class Indicators(object):
         URLs visible in the official documentation). 
 
         :param source_codes:    List of source IDs. If None, queries all (~27).
-        :param search:          Regexp string to return matching results.
-        :param kwargs:          Language
+
+        :param search:      Regexp string to return matching results.
+
+        :param kwargs:      These map directly to the API query args:
+                            *language*.
 
         :returns:   Dict of sources using ID numbers as keys.
         """
@@ -251,9 +289,10 @@ class Indicators(object):
     def print_codes(self, results, search=None):
         """ Print formatted list of API IDs and their corresponding values.
         
-        :results:       A dictionary that was returned by one of the ``get``
-                        functions.
-        :param search:          Regexp string to return matching results.
+        :param results:     A dictionary that was returned by one of the ``get``
+                            functions.
+
+        :param search:      Regexp string to return matching results.
         """
         if search:
             results = self.search_results(search, results)
@@ -279,8 +318,9 @@ class Indicators(object):
         not match the given regexp in either the key or the value. The search
         is *not case sensitive*.
 
-        :regexp:        The regexp string, passed to ``re.search``.
-        :results:       A dictionary of ``get_`` results.
+        :param regexp:      The regexp string, passed to ``re.search``.
+
+        :param results:     A dictionary of ``get_`` results.
 
         :returns:       The input dictionary, with non-matching keys removed.
         """
@@ -360,8 +400,10 @@ class Indicators(object):
         """ 
         :param api_ids:         API codes for the indicator, eg. if calling a 
                                 topic might be [1, 2, 5].
+
         :param rest_url:        The access point, eg. 'indicators', 
                                 'lendingType'.
+
         :param response_key:    The key in the JSON response that will be 
                                 used as the top-level keys in the returned dict.
 
@@ -385,8 +427,14 @@ class Indicators(object):
 
 
 class Climate(object):
-    def __init__(self, cache=_fetch):
-        self.fetch = cache
+    def __init__(self, fetch=_fetch):
+        """ A connection to the World Bank Climate API. 
+
+        You can override the default tempfile cache by passing a ``fetch`` 
+        function, which fetches a url and returns a string. ``self.fetch`` can
+        also be set after instantiation.
+        """
+        self.fetch = fetch
         self.base_url = "http://climatedataapi.worldbank.org/climateweb/rest/"
         self._valid_modelled_dates = (
             (1920, 1939),
@@ -476,6 +524,7 @@ class Climate(object):
 
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
+
         :param interval:    `year`, `month` or `decade`.
         
         :returns:   Data and metadata dicts. Data keys are 
@@ -495,12 +544,16 @@ class Climate(object):
         """ Get precipitation data derived from global circulation models. 
 
         :param data_type:   Single type ID. See ``self.definitions['type']``.
+
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
+
         :param gcm:         List of GCMs. If None, gets all except `ensemble`. 
                             See ``self.definitions['gcm']``.
+
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
+
         :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
                             can limit the percentile value of models. List, 
                             possible percentiles are `10`, `50`, `90`. 
@@ -525,12 +578,16 @@ class Climate(object):
         """ Get precipitation or temperature statistic derived from `ensemble`
         data - ie. from all GCMs. 
 
-        :param stat:        Single stat ID. See ``self.definitions['stat']``.
-        :param data_type:   Single type ID. See ``self.definitions['type']``.
-        :param locations:   Get data for list of ISO country codes and World 
-                            Bank basin IDs.
+        :param stat:          Single stat ID. See ``self.definitions['stat']``.
+
+        :param data_type:     Single type ID. See ``self.definitions['type']``.
+
+        :param locations:     Get data for list of ISO country codes and World 
+                              Bank basin IDs.
+
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
+
         :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
                             can limit the percentile value of models. List, 
                             possible percentiles are `10`, `50`, `90`. 
