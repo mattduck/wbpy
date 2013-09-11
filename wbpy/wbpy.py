@@ -236,33 +236,30 @@ class Indicators(object):
                 response_key="id", match=match, **kwargs)
 
     def print_codes(self, results, match=None):
-        """ Print formatted list of API IDs + values/names for the results of
-        any of the ``get`` functions.  (For ``get_country_indicators``, only the
-        metadata dict will print properly, the 'data' one will not).
-
+        """ Print formatted list of API IDs and their corresponding values.
+        
+        :results:       A dictionary that was returned by one of the ``get``
+                        functions.
         :param match:   See ``match_data``.
         """
-        # If this is the 'metadata' dict from get_country_indicators(), process
-        # both halves (countries + indicators) separately:
-        if results.has_key('countries') and results.has_key('indicators'):
-            self.print_codes(results['countries'])
-            self.print_codes(results['indicators'])
-        else:
-            if match:
-                results = self.match_data(match, results)
+        if match:
+            results = self.match_data(match, results)
 
-            # Natural sort the result keys for nicer print order
-            def try_int(text):
-                return int(text) if text.isdigit() else text
-            def natural_keys(text):
-                return [try_int(k) for k in re.split("(\d+)", text)]
+        # Natural sort the result keys for nicer print order
+        def try_int(text):
+            return int(text) if text.isdigit() else text
+        def natural_keys(item):
+            key = item[0]
+            return [try_int(s) for s in re.split("(\d+)", key)]
 
-            for k in sorted(results.keys(), key=natural_keys):
-                v = results[k]
-                try:
-                    print u"{:30} {}".format(k, v['name'])
-                except TypeError: # ie. is value from get_country_indicators()
-                    print u"{:30} {}".format(k, v)
+        for k, v in sorted(results.items(), key=natural_keys):
+            # Value will either be a dict or string
+            if hasattr(v, "get"):
+                main_value = v.get("name", v.get("value", v))
+            else:
+                main_value = v
+            print u"{:30} {}".format(k, main_value)
+
 
     def match_data(self, ss, results):
         """ For a given dict (eg. of ``get`` results), filter out all 

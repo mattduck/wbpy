@@ -103,6 +103,56 @@ class TestIndicators(unittest.TestCase):
         data = ind.get_sources(match="11") # 11 is a key, and not in the value
         self.assertIn("11", [str(x) for x in data.keys()])
 
+    def test_print_codes_func_handles_get_countries_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_countries()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_country_indicators_func(self):
+        ind = wbpy.Indicators()
+        data, metadata = ind.get_country_indicators(["SP.POP.TOTL"])
+        ind.print_codes(data)
+        ind.print_codes(metadata)
+        assert True
+
+    def test_print_codes_func_handles_get_income_levels_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_income_levels()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_indicators_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_indicators()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_lending_types_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_lending_types()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_regions_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_regions()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_sources_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_sources()
+        ind.print_codes(data)
+        assert True
+
+    def test_print_codes_func_handles_get_topics_func(self):
+        ind = wbpy.Indicators()
+        data = ind.get_topics()
+        ind.print_codes(data)
+        assert True
+
+
 class TestClimate(unittest.TestCase):
     def test_get_precip_instrumental(self):
         # Test can use multiple locations.
