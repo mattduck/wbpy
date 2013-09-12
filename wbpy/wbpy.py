@@ -521,6 +521,9 @@ class Indicators(object):
         return filtered_data
 
 
+_ClimateDataTuple = namedtuple("WorldBankClimateData", 
+    ["data", "metadata"])
+
 class Climate(object):
     def __init__(self, fetch=_fetch):
         """ A connection to the World Bank Climate API. 
@@ -593,7 +596,10 @@ class Climate(object):
                 inmcm3_0="INMCM3.0",
                 ukmo_hadcm3="UKMO HadCM3",
                 ukmo_hadgem1="UKMO HadGEM3",
-                ensemble="x Percentile values of all models together",
+                ensemble="All percentile values of all models together",
+                ensemble_10="10th percentile values of all models together",
+                ensemble_50="50th percentile values of all models together",
+                ensemble_90="90th percentile values of all models together",
                 ),
             sres=dict(
                 a2="A2 Scenario",
@@ -634,8 +640,7 @@ class Climate(object):
         return self._get_instrumental(var="tas", locations=locations,
                 interval=interval)
 
-    def get_precip_modelled(self, data_type, locations, gcm=None,
-        sres=None, ensemble_percentiles=None):
+    def get_precip_modelled(self, data_type, locations, gcm=None, sres=None):
         """ Get precipitation data derived from global circulation models. 
 
         :param data_type:   Single type ID. See ``self.definitions['type']``.
@@ -649,27 +654,21 @@ class Climate(object):
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
 
-        :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
-                            can limit the percentile value of models. List, 
-                            possible percentiles are `10`, `50`, `90`. 
-                            If None, gets all.
-
         :returns:   Data and metadata dicts. Data dict keys are:
                     `gcm` > `location` > `(year, sres)` > `values`.
         """
         return self._get_modelled(var="pr", data_type=data_type,
-                locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentiles=ensemble_percentiles)
+                locations=locations, gcm=gcm, sres=sres)
+                
 
-    def get_temp_modelled(self, data_type, locations, gcm=None,
-        sres=None, ensemble_percentiles=None):
+    def get_temp_modelled(self, data_type, locations, gcm=None, sres=None):
         """ Get modelled temperature data. ``See get_precip_modelled()``. """
         return self._get_modelled(var="tas", data_type=data_type,
-                locations=locations, gcm=gcm, sres=sres,
-                ensemble_percentiles=ensemble_percentiles)
+                locations=locations, gcm=gcm, sres=sres)
+    
 
-    def get_derived_stat(self, stat, data_type, locations, sres=None, 
-            ensemble_percentiles=None):
+    def get_derived_stat(self, stat, data_type, locations,
+            ensemble_gcm=None, sres=None): 
         """ Get precipitation or temperature statistic derived from `ensemble`
         data - ie. from all GCMs. 
 
@@ -680,20 +679,20 @@ class Climate(object):
         :param locations:     Get data for list of ISO country codes and World 
                               Bank basin IDs.
 
+        :param ensemble_gcm:    List of any of the "ensemble" GCM values.
+                                Defaults to ["ensemble"], which gets all of them.
+
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
-
-        :param ensemble_percentiles:    If `ensemble` is given in the GCMs, you 
-                            can limit the percentile value of models. List, 
-                            possible percentiles are `10`, `50`, `90`. 
-                            If None, gets all.
 
         :returns:   Data and metadata dicts. Data dict keys are:
                     `gcm` > `location` > `(year, sres)` > values.
         """
+        if not ensemble_gcm:
+            ensemble_gcm = ["ensemble"]
+
         return self._get_modelled(var=stat, data_type=data_type,
-                locations=locations, sres=sres, 
-                ensemble_percentiles=ensemble_percentiles, gcm=["ensemble"])
+                locations=locations, sres=sres, gcm=ensemble_gcm)
 
     def _get_instrumental(self, var, locations, interval="year"):
         # Construct URLs
@@ -728,10 +727,9 @@ class Climate(object):
         metadata = {}
         metadata["stat"] = self._definitions[var] # pr or tas
         metadata["interval"] = interval
-        return results, metadata
+        return _ClimateDataTuple(results, metadata)
 
-    def _get_modelled(self, var, data_type, locations, gcm=None,
-        sres=None, ensemble_percentiles=None):
+    def _get_modelled(self, var, data_type, locations, gcm=None, sres=None):
         """ Handles the different modelled calls - ensemble, derived
         stat, etc. 
         """
@@ -750,8 +748,9 @@ class Climate(object):
                 metadata["gcm"][model.lower()] = \
                     self.definitions["gcm"][model.lower()]
         else:
-            metadata["gcm"] = self.definitions["gcm"].copy()
-            del(metadata["gcm"]["ensemble"])
+            for gcm_k, gcm_v in self.definitions["gcm"].items():
+                if not gcm_v.startswith("ensemble"):
+                    metadata["gcm"][gcm_k] = gcm_v
         if sres:
             metadata["sres"] = self.definitions["sres"][sres.lower()]
         else:
@@ -773,29 +772,46 @@ class Climate(object):
             else:
                 metadata["type"] += " " + self._definitions["anom_cp_stat"]
 
-        # Ensemble and other modelled calls split into different methods, 
-        # as have different url and response structures, and it messy having
-        # having one function with lots of clauses etc.
+        # Ensemble requests are separated from other modelled requests, as they 
+        # have a different URL and response structure, and it's messy having
+        # a single method with lots of clauses etc.
         results = {}
         metadata["dates"] = {}
-        if gcm and "ensemble" in gcm:
+        ensemble_gcms = []
+        if gcm:
+            for val in gcm:
+                if val.startswith("ensemble"):
+                    ensemble_gcms.append(val)
+        if ensemble_gcms:
             results, dates = self._get_modelled_ensemble(var=var, 
-                         data_type=data_type, locations=locations, 
-                         sres=sres, ensemble_percentiles=ensemble_percentiles)
-            for fr, to in dates:
-                metadata["dates"][fr] = to
-        try:
-            more_gcms_given = len(gcm) > 1    
-        except TypeError:
-            pass
-        if gcm == None or more_gcms_given:
+                 data_type=data_type, locations=locations, sres=sres,
+                 gcms=ensemble_gcms) 
+            for from_date, to_date in dates:
+                metadata["dates"][from_date] = to_date
+
+        another_request = False
+        if gcm:
+            gcm = filter(lambda name: not name.startswith("ensemble"), gcm)
+            if gcm:
+                # If there are more GCM models to come, they'll be passed on 
+                # with the "ensemble" ones filtered out.
+                another_request = True
+        else:
+            # No GCM given, must make request
+            another_request = True
+        
+        if another_request:
             gcm_results, dates = self._get_modelled_gcm(var=var, 
-                                 data_type=data_type, locations=locations, 
-                                 sres=sres, gcm=gcm)
-            for fr, to in dates:
-                metadata["dates"][fr] = to
-            results.update(gcm_results) # Dicts won't have same top-level keys
-        return results, metadata
+                 data_type=data_type, locations=locations, 
+                 sres=sres, gcm=gcm)
+            for from_date, to_date in dates:
+                metadata["dates"][from_date] = to_date
+
+            # These results will never have the same top-level keys as the
+            # ensemble results, so update the original dictionary.
+            results.update(gcm_results)
+
+        return _ClimateDataTuple(results, metadata)
 
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
@@ -854,6 +870,8 @@ class Climate(object):
                 if k not in gcm:
                     del(results[k])
         if sres:
+            # Fine to iterate over this dict, as we're not deleting top-level
+            # keys
             for gcm_key in results:
                 for loc in results[gcm_key]:
                     time_keys = results[gcm_key][loc].keys()
@@ -869,7 +887,9 @@ class Climate(object):
         return results, set(dates)
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
-            ensemble_percentiles=None):
+            gcms=None):
+        # GCMs are assumed to be "ensemble" ones
+
         if var not in ["pr", "tas"]:
             # Then assume it's a stat. Stat directly replaces the var API arg.
             valid_dates = self._valid_stat_dates
@@ -898,7 +918,7 @@ class Climate(object):
             response = json.loads(self.fetch(url))
             for data in response:
                 # L1 - percentile
-                gcm_key = ("ensemble", data["percentile"])
+                gcm_key = "_".join(["ensemble", str(data["percentile"])])
                 if gcm_key not in results:
                     results[gcm_key] = {}
                 # L2 - Location
@@ -918,12 +938,13 @@ class Climate(object):
                 elif data.has_key("annualVal"):
                     results[gcm_key][loc][time] = data["annualVal"][0]
 
-        # Filter unwanted
-        if ensemble_percentiles:
-            res_keys = results.keys()
-            for k in res_keys:
-                if str(k[1]) not in [str(x) for x in ensemble_percentiles]:
+        # If "ensemble" is given as a gcm, it should get all percentiles.
+        # If eg. "ensemble_50" is given, it should only return 50th percentile.
+        if gcms and "ensemble" not in gcms:
+            for k in results.keys():
+                if k not in gcms:
                     del(results[k])
+
         if sres:
             for gcm_key in results:
                 for loc in results[gcm_key]:

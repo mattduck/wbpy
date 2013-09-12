@@ -227,7 +227,8 @@ class TestClimate(unittest.TestCase):
         c = wbpy.Climate()
         data, md = c.get_precip_modelled(data_type='aavg', locations=['usa'],
                             gcm=['ensemble'])
-        self.assertTrue(all([k[0] == 'ensemble' for k in data.keys()]))
+        for k in data.keys():
+            self.assertTrue(k.startswith("ensemble"))
 
     def test_get_precip_modelled_mavg(self):
         # General results layout - keys etc
@@ -262,7 +263,7 @@ class TestClimate(unittest.TestCase):
         c = wbpy.Climate()
         data, md = c.get_derived_stat(data_type='aanom', stat='tmin_days10th',
                 locations=['gb', 'JP'])
-        self.assertTrue(data[('ensemble', 10)]['JP'].has_key((2046, 'b1')))
+        self.assertTrue(data["ensemble_10"]['JP'].has_key((2046, 'b1')))
 
     def test_returned_metadata_is_correct(self):
         # Also test Climate().definitions exist
@@ -273,20 +274,22 @@ class TestClimate(unittest.TestCase):
         self.assertTrue(md['sres'].has_key('b1'))
         self.assertTrue(md['stat'] == c.definitions['stat']['tmin_days10th'])
 
-    def test_ensemble_percentile_arg_filters(self):
-        c = wbpy.Climate()
-        data, md = c.get_precip_modelled('mavg', ['GB'], gcm=['ensemble'],
-                ensemble_percentiles=[10])
-        self.assertEquals(data.keys(), [('ensemble', 10)])
-
     def test_can_put_ensemble_as_a_model_in_gcm_list(self):
         # Also check dates exist in metadata
         c = wbpy.Climate()
         data, md = c.get_temp_modelled('aanom', ['AF'], 
-                gcm=['ensemble', 'cccma_cgcm3_1'], ensemble_percentiles=[50, 90])
-        expected_keys = [('ensemble', 90), ('ensemble', 50), 'cccma_cgcm3_1']
+            gcm=['ensemble', 'cccma_cgcm3_1'])
+
+        expected_keys = ["ensemble_10", "ensemble_50", "ensemble_90",
+                "cccma_cgcm3_1"] 
         self.assertTrue(all([k in expected_keys for k in data.keys()]))
         self.assertIsNotNone(md['dates'])
+
+    def test_ensemble_percentile_gcms(self):
+        c = wbpy.Climate()
+        data, md = c.get_precip_modelled("mavg", ["GB"], 
+            gcm=["ensemble_50"])
+        self.assertEqual(data.keys(), ["ensemble_50"])
 
     def test_aanom_modelled_gcm_results_arent_blank(self):
         c = wbpy.Climate()
