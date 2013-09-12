@@ -68,14 +68,18 @@ _CountryIndicatorsTuple = namedtuple("WorldBankCountryIndicators",
 
 
 class Indicators(object):
-    def __init__(self, fetch=_fetch):
+
+    # ========================================================================
+    # PUBLIC METHODS
+    # ========================================================================
+
+    def __init__(self, fetch=None):
         """ A connection to the World Bank Indicators API.
 
         You can override the default tempfile cache by passing a ``fetch`` 
         function, which fetches a url and returns a string. ``self.fetch`` can
         also be set after instantiation.
         """
-        self.fetch = fetch
         self.base_url = "http://api.worldbank.org/"
 
         # The Indicators API (but not Climate API) uses a couple of
@@ -86,15 +90,19 @@ class Indicators(object):
             "KV": {"name": "Kosovo", "3-digit": "KSV"}
             }
 
-    # ========== PUBLIC METHODS =========
+        if fetch:
+            self.fetch = fetch
+        else: 
+            self.fetch = _fetch
+
 
     def get_country_indicators(self, indicator_codes, country_codes=None, 
             **kwargs):
-        """ Get indicator metrics for countries.
+        """ Get specific indicator data for countries.
 
-        :param indicator_codes:     Required list of metric codes.
+        :param indicator_codes:     Required list of API indicator codes.
 
-        :param country_codes:   List of countries to get indicator data for. 
+        :param country_codes:   List of countries to get data for. 
                                 If None, queries all countries.
 
         :param kwargs:      These map directly to the API query args:
@@ -104,13 +112,7 @@ class Indicators(object):
                             *gapfill*, 
                             *frequency*.
 
-        :returns:   Namedtuple with the following attrs:
-                    *data* - the data, organising by indicato
-        
-        :returns:   Two dicts. The first contains the data, with nested keys: 
-                    `Indicator code > ISO 2-digit country code > Date > Value`. 
-                    The second dict contains the names/values for the 
-                    indicator and country codes.
+        :returns:   Namedtuple with *data*, *countries* and *indicators* attrs.
         """
         # Generate urls and concatenate multiple calls into one list.
         response_data = []
@@ -150,9 +152,10 @@ class Indicators(object):
         return _CountryIndicatorsTuple(data, indicator_metadata,
             country_metadata)
 
+
     def get_indicators(self, indicator_codes=None, search=None,
             search_full=False, common_only=False, **kwargs):
-        """ Make call to retrieve indicator codes and information.
+        """ Get metadata on specific World Bank indicators.
 
         :param indicator_codes: List of codes, eg. SP.POP.TOTL for population.
                                 If None, queries all (~8000).
@@ -163,15 +166,15 @@ class Indicators(object):
                                 main World Bank website (leaving ~1500).
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*,
                             *source*,
                             *topic*.
         
-        :returns:   Dict of indicators, using ID codes as keys.
+        :returns:   Dictionary of indicators with API IDs as keys.
         """
         func_params = {
             "response_key": "id",
@@ -203,6 +206,7 @@ class Indicators(object):
         else:
             return results
 
+
     def get_countries(self, country_codes=None, search=None,
             search_full=False, **kwargs):
         """ Get info on countries, eg. ISO codes, longitude/latitude, capital
@@ -212,8 +216,8 @@ class Indicators(object):
                                 queries all.
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*,
@@ -221,7 +225,7 @@ class Indicators(object):
                             *lendingType*,
                             *region*.
 
-        :returns:   Dict of countries using 2-letter ISO codes as keys.
+        :returns:   Dictionary of countries using 2-letter ISO codes as keys.
         """
         func_params = {
             "response_key": "iso2Code",
@@ -235,6 +239,7 @@ class Indicators(object):
             country_codes, search=search, search_full=search_full, 
             **kwargs) 
 
+
     def get_income_levels(self, income_codes=None, search=None,
             search_full=False, **kwargs):
         """ Get income categories.
@@ -243,13 +248,13 @@ class Indicators(object):
                                 (~10). 
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*.
 
-        :returns:   Dict of income levels using ID codes as keys.
+        :returns:   Dictionary of income levels using ID codes as keys.
         """
         func_params = {
             "response_key": "id",
@@ -260,6 +265,7 @@ class Indicators(object):
             income_codes, search=search, search_full=search_full, 
             **kwargs)
 
+
     def get_lending_types(self, lending_codes=None, search=None,
             search_full=False, **kwargs):
         """ Get lending type categories. 
@@ -267,13 +273,13 @@ class Indicators(object):
         :param lending_codes:   List of lending codes. If None, queries all (4).
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*.
 
-        :returns:   Dict of lending types using ID codes as keys.
+        :returns:   Dictionary of lending types using ID codes as keys.
         """
         func_params = {
             "response_key": "id",
@@ -284,6 +290,7 @@ class Indicators(object):
             lending_codes, search=search, search_full=search_full, 
             **kwargs)
 
+
     def get_regions(self, region_codes=None, search=None, search_full=False, 
             **kwargs):
         """ Get wider region names and codes. 
@@ -292,13 +299,13 @@ class Indicators(object):
                                 (~26).
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*.
                         
-        :returns:   Dict of regions, using ID codes as keys.
+        :returns:   Dictionary of regions, using ID codes as keys.
         """
         func_params = {
             "response_key": "code",
@@ -309,6 +316,7 @@ class Indicators(object):
             region_codes, search=search, search_full=search_full, 
             **kwargs)
 
+
     def get_topics(self, topic_codes=None, search=None,
             search_full=False, **kwargs):
         """ Get Indicators topics. All indicators are mapped 
@@ -318,13 +326,13 @@ class Indicators(object):
         :param topic_codes: List of topic IDs. If None, queries all (~20).
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*.
 
-        :returns:   Dict of topics usings ID numbers as keys.
+        :returns:   Dictionary of topics usings ID numbers as keys.
         """
         func_params = {
             "response_key": "id",
@@ -334,6 +342,7 @@ class Indicators(object):
         return self._get_indicator_data(func_params, 
             topic_codes, search=search, search_full=search_full, 
             **kwargs)
+
 
     def get_sources(self, source_codes=None, search=None,
             search_full=False, **kwargs):
@@ -345,13 +354,13 @@ class Indicators(object):
         :param source_codes:    List of source IDs. If None, queries all (~27).
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
 
         :param kwargs:      These map directly to the API query args:
                             *language*.
 
-        :returns:   Dict of sources using ID numbers as keys.
+        :returns:   Dictionary of sources using ID numbers as keys.
         """
         func_params = {
             "response_key": "id",
@@ -362,15 +371,16 @@ class Indicators(object):
             source_codes, search=search, search_full=search_full, 
             **kwargs)
 
-    def print_codes(self, results):
+
+    def print_codes(self, results, search=None, search_full=None):
         """ Print formatted list of API IDs and their corresponding values.
         
         :param results:     A dictionary that was returned by one of the ``get``
                             functions.
 
         :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity, eg. a country
-                        name. If *search_full* is True, all fields are searched.
+                        searches the main name of the entity. If *search_full*
+                        is True, all fields are searched.
         """
         # Natural sort the result keys for nicer print order
         def try_int(text):
@@ -378,6 +388,15 @@ class Indicators(object):
         def natural_keys(item):
             key = item[0]
             return [try_int(s) for s in re.split("(\d+)", key)]
+
+        if search:
+            # Either search everything, or just the main "name" value of the
+            # entity.
+            if search_full:
+                results = self.search_results(search, results)
+            else:
+                results = self.search_results(search, results,
+                    func_params["search_key"])
 
         for k, v in sorted(results.items(), key=natural_keys):
             # Value will either be a dict or string
@@ -417,7 +436,10 @@ class Indicators(object):
                     search_matches[k] = v
         return search_matches
 
-    # ========== PRIVATE METHODS ==========
+
+    # ========================================================================
+    # PRIVATE METHODS
+    # ========================================================================
 
     def _generate_indicators_url(self, rest_url, **kwargs):
         """ Adds API root and query string options to an otherwise complete 
@@ -466,6 +488,7 @@ class Indicators(object):
         new_url = "".join([self.base_url, rest_url, query_string])
         return new_url
 
+
     def _get_api_response_as_json(self, url):
         """ Returns JSON content from Indicators URL. Concatenates the returned
         list if request requires multiple-page responses.
@@ -479,6 +502,7 @@ class Indicators(object):
             next_page = url + "&page={0}".format(current_page + 1)
             content += self._get_api_response_as_json(next_page)
         return content
+
 
     def _get_indicator_data(self, func_params, api_ids, search=None,
             search_full=False, **kwargs):
@@ -498,8 +522,8 @@ class Indicators(object):
         :param rest_url:        The access point, eg. 'indicators', 
                                 'lendingType'.
 
-        :returns:       Dict with keys that are the given response_key for the
-                        API response.
+        :returns:       Dictionary with keys that are the given response_key
+                        for the API response.
         """
         # Make the URL and call the JSON data.
         if api_ids:
@@ -534,14 +558,18 @@ _ClimateDataTuple = namedtuple("WorldBankClimateData",
     ["data", "metadata"])
 
 class Climate(object):
-    def __init__(self, fetch=_fetch):
+
+    # ========================================================================
+    # PUBLIC METHODS
+    # ========================================================================
+
+    def __init__(self, fetch=None):
         """ A connection to the World Bank Climate API. 
 
         You can override the default tempfile cache by passing a ``fetch`` 
         function, which fetches a url and returns a string. ``self.fetch`` can
         also be set after instantiation.
         """
-        self.fetch = fetch
         self.base_url = "http://climatedataapi.worldbank.org/climateweb/rest/"
         self._valid_modelled_dates = (
             (1920, 1939),
@@ -626,6 +654,12 @@ class Climate(object):
             anom_cp_stat="The control period is 1961 - 2000.",
             )
 
+        if fetch:
+            self.fetch = fetch
+        else: 
+            self.fetch = _fetch
+
+
     def get_precip_instrumental(self, locations, interval="year"):
         """ Get historical precipitation data, `based on gridded climatologies
         from the Climate Research Unit`. These `are proxies, where modelling has
@@ -643,11 +677,13 @@ class Climate(object):
         return self._get_instrumental(var="pr", locations=locations,
                 interval=interval)
 
+
     def get_temp_instrumental(self, locations, interval="year"):
         """ Get historical temperature data. See ``get_precip_instrumental()``. 
         """
         return self._get_instrumental(var="tas", locations=locations,
                 interval=interval)
+
 
     def get_precip_modelled(self, data_type, locations, gcm=None, sres=None):
         """ Get precipitation data derived from global circulation models. 
@@ -657,14 +693,13 @@ class Climate(object):
         :param locations:   Get data for list of ISO country codes and World 
                             Bank basin IDs.
 
-        :param gcm:         List of GCMs. If None, gets all except `ensemble`. 
+        :param gcm:         List of GCMs. If None, gets all except `ensembles`. 
                             See ``self.definitions['gcm']``.
 
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
 
-        :returns:   Data and metadata dicts. Data dict keys are:
-                    `gcm` > `location` > `(year, sres)` > `values`.
+        :returns:   Namedtuple with *data* and *metadata* attrs.
         """
         return self._get_modelled(var="pr", data_type=data_type,
                 locations=locations, gcm=gcm, sres=sres)
@@ -689,19 +724,24 @@ class Climate(object):
                               Bank basin IDs.
 
         :param ensemble_gcm:    List of any of the "ensemble" GCM values.
-                                Defaults to ["ensemble"], which gets all of them.
+                                Defaults to ["ensemble"], which gets all
+                                percentiles.
 
         :param sres:        Scenario ID - either `a2` or `b1`. If None, gets 
                             both scenarios.
 
-        :returns:   Data and metadata dicts. Data dict keys are:
-                    `gcm` > `location` > `(year, sres)` > values.
+        :returns:   Namedtuple with *data* and *metadata* attrs.
         """
         if not ensemble_gcm:
             ensemble_gcm = ["ensemble"]
 
         return self._get_modelled(var=stat, data_type=data_type,
                 locations=locations, sres=sres, gcm=ensemble_gcm)
+
+
+    # ========================================================================
+    # PRIVATE METHODS
+    # ========================================================================
 
     def _get_instrumental(self, var, locations, interval="year"):
         # Construct URLs
@@ -737,6 +777,7 @@ class Climate(object):
         metadata["stat"] = self._definitions[var] # pr or tas
         metadata["interval"] = interval
         return _ClimateDataTuple(results, metadata)
+
 
     def _get_modelled(self, var, data_type, locations, gcm=None, sres=None):
         """ Handles the different modelled calls - ensemble, derived
@@ -822,6 +863,7 @@ class Climate(object):
 
         return _ClimateDataTuple(results, metadata)
 
+
     def _get_modelled_gcm(self, var, data_type, locations, gcm=None,
         sres=None):
         # Construct the requested urls
@@ -894,6 +936,7 @@ class Climate(object):
                                 # a future value with a sres)
                                 pass
         return results, set(dates)
+
 
     def _get_modelled_ensemble(self, var, data_type, locations, sres=None,
             gcms=None):
