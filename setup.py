@@ -6,7 +6,7 @@ except ImportError:
 
 setup(  
     name="wbpy",
-    version="0.2.1",
+    version="1.0.0",
     license="MIT",
     author="Matthew Duck",
     author_email="matt@mattduck.com",
@@ -16,7 +16,7 @@ setup(
     packages=['wbpy'],
     provides=['wbpy'],
     install_requires=['pycountry'],
-    classifiers=['Development Status :: 3 - Alpha',
+    classifiers=['Development Status :: 4 - Beta',
                  'Intended Audience :: Developers', 
                  'Intended Audience :: Science/Research', 
                  'License :: OSI Approved :: MIT License',
