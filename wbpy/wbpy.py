@@ -40,6 +40,7 @@ def _fetch(url):
     logger.debug("%s saved to cache." % url)
     return web_page
 
+
 def _convert_to_alpha2(code):
     # Convert code if it ISO one, else return
     try:
@@ -76,6 +77,14 @@ class Indicators(object):
         """
         self.fetch = fetch
         self.base_url = "http://api.worldbank.org/"
+
+        # The Indicators API (but not Climate API) uses a couple of
+        # non-ISO 2-digit and 3-digit codes for regions. Make them accessible
+        # so users don't have to keep referring to API docs.
+        self.nonstandard_codes = {
+            "JG": {"name": "Channel Islands", "3-digit": "CHI"},
+            "KV": {"name": "Kosovo", "3-digit": "KSV"}
+            }
 
     # ========== PUBLIC METHODS =========
 

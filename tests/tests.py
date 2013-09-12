@@ -202,6 +202,52 @@ class TestIndicators(unittest.TestCase):
 
         self.assertGreater(full_len, default_len)
 
+    def test_ISO_2_standard_codes_supported(self):
+        ind = wbpy.Indicators()
+
+        codes = ["US", "AF"]
+        data = ind.get_countries(codes)
+        self.assertEqual(data["US"]["name"], "United States")
+        self.assertEqual(data["AF"]["name"], "Afghanistan")
+
+    def test_ISO_3_standard_codes_supported(self):
+        ind = wbpy.Indicators()
+
+        codes = ["USA", "AFG"]
+        data = ind.get_countries(codes)
+        self.assertEqual(data["US"]["name"], "United States")
+        self.assertEqual(data["AF"]["name"], "Afghanistan")
+
+    def test_documentation_claim_that_nonstandard_codes_used_is_false(self):
+        ind = wbpy.Indicators()
+
+        countries = [
+            # The API documentation claims that these countries use either
+            # non-standard alpha-2 or alpha-3 codes. This test tries
+            # all the official alpha-2 and alpha-3 values. If it fails, we 
+            # need to convert them, so that the Indicators() class supports
+            # all the offical codes.
+            ("andorra", "ad", "and"),
+            ("serbia", "rs", "srb"),
+            ("congo, dem", "cd", "cod"),
+            ("isle of man", "im", "imn"),
+            ("romania", "ro", "rou"),
+            ("timor-leste", "tl", "tls"),
+            ("gaza", "ps", "pse"),
+
+            # These are actually not standard - they don't have 
+            # ISO 1366 entries
+            ("channel islands", "jg", "chi"),
+            ("kosovo", "kv", "ksv"),
+            ]
+
+        for name, iso2, iso3 in countries:
+            for code in [iso2, iso3]:
+                data = ind.get_countries([code])
+                self.assertIn(name.lower(), 
+                    data[iso2.upper()]["name"].lower())
+                self.assertEqual(len(data), 1)
+
 
 class TestClimate(unittest.TestCase):
     def test_get_precip_instrumental(self):
@@ -297,6 +343,49 @@ class TestClimate(unittest.TestCase):
         for locs in data.values():
             for value in locs['GB'].values():
                 self.assertNotEqual({}, value )
+
+    def test_ISO_2_standard_codes_supported(self):
+        c = wbpy.Climate()
+
+        codes = ["US", "AF"]
+        data, md = c.get_precip_instrumental(codes)
+        self.assertTrue(data.has_key("US"))
+        self.assertTrue(data.has_key("AF"))
+
+    def test_ISO_3_standard_codes_supported(self):
+        c = wbpy.Climate()
+
+        codes = ["USA", "AFG"]
+        data, md = c.get_precip_instrumental(codes)
+        self.assertTrue(data.has_key("US"))
+        self.assertTrue(data.has_key("AF"))
+
+    def test_the_nonstandard_ISO_codes_for_Indicators_countries(self):
+        c = wbpy.Climate()
+
+        countries = [
+            # Check the supposed non-standard codes from the Indicators API.
+            ("andorra", "ad", "and"),
+            ("serbia", "rs", "srb"),
+            ("congo, dem", "cd", "cod"),
+            ("isle of man", "im", "imn"),
+            ("romania", "ro", "rou"),
+            ("timor-leste", "tl", "tls"),
+            ("gaza", "ps", "pse"),
+
+            # These non-standard entries that are used by the Indicators API
+            # do NOT work for the Climate API.
+            # 
+            #("channel islands", "jg", "chi"),
+            #("kosovo", "kv", "ksv"),
+            ]
+
+        for name, iso2, iso3 in countries:
+            for code in [iso2, iso3]:
+                data, md = c.get_precip_instrumental([code])
+                self.assertTrue(data.has_key(iso2.upper()))
+                self.assertEqual(len(data), 1)
+
 
 if __name__ == '__main__':
     unittest.main()
