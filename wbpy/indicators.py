@@ -166,6 +166,8 @@ class IndicatorAPI(object):
             url = self._generate_indicators_url(url, **kwargs)
             call_date = datetime.datetime.now()
             json_resp = json.loads(self.fetch(url))
+            self._raise_if_response_contains_error(json_resp, url)
+
             datasets.append(IndicatorDataset(json_resp, url, call_date))
         return datasets
 
@@ -515,9 +517,10 @@ class IndicatorAPI(object):
         list if request requires multiple-page responses.
         """
         web_page = self.fetch(url)
-        json_data = json.loads(web_page)
-        header = json_data[0]
-        content = json_data[1]
+        json_resp = json.loads(web_page)
+        self._raise_if_response_contains_error(json_resp, url)
+        header = json_resp[0]
+        content = json_resp[1]
         current_page = header["page"]
         if current_page < header["pages"]:
             next_page = url + "&page={0}".format(current_page + 1)
@@ -573,3 +576,10 @@ class IndicatorAPI(object):
                 filtered_data = self.search_results(search, filtered_data,
                     func_params["search_key"])
         return filtered_data
+
+    def _raise_if_response_contains_error(self, json_resp, url):
+        if len(json_resp) == 1:
+            str_resp = str(json_resp).lower()
+            if "message" in str_resp:
+                raise ValueError, utils.EXC_MSG % (url, json_resp)
+
