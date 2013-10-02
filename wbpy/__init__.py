@@ -1,8 +1,10 @@
-from wbpy import Climate
-from indicators import IndicatorDataset, IndicatorAPI
+from indicators import IndicatorAPI, IndicatorDataset
+from climate import ClimateAPI, HistoricalDataset, ModelledDataset
 
 __all__ = [
     IndicatorAPI,
     IndicatorDataset,
-    Climate,
+    ClimateAPI,
+    HistoricalDataset,
+    ModelledDataset,
     ]
