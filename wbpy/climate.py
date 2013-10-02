@@ -226,7 +226,7 @@ class ClimateAPI(object):
                 mri_cgcm2_3_2a="MRI-CGCM2.3.2",
                 inmcm3_0="INMCM3.0",
                 ukmo_hadcm3="UKMO HadCM3",
-                ukmo_hadgem1="UKMO HadGEM3",
+                ukmo_hadgem1="UKMO HadGEM1",
                 ensemble="All percentile values of all models together",
                 ensemble_10="10th percentile values of all models together",
                 ensemble_50="50th percentile values of all models together",
