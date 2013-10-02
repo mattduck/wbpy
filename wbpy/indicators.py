@@ -2,6 +2,7 @@
 import numbers
 import re
 import datetime
+import pprint
 try:
     import simplejson as json
 except ImportError:
@@ -47,7 +48,7 @@ class IndicatorDataset(object):
             )
 
     def __str__(self):
-        return str(self.data_as_dict())
+        return pprint.pformat(self.data_as_dict())
 
     def data_dates(self, use_datetime=False):
         dates = []
@@ -580,6 +581,6 @@ class IndicatorAPI(object):
     def _raise_if_response_contains_error(self, json_resp, url):
         if len(json_resp) == 1:
             str_resp = str(json_resp).lower()
-            if "message" in str_resp:
+            if ("message" in str_resp) or ("pages: 0" in str_resp):
                 raise ValueError, utils.EXC_MSG % (url, json_resp)
 
