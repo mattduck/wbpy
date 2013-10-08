@@ -32,10 +32,10 @@ class TestIndicatorDatasetBasicAttrs(unittest.TestCase):
             self.assertEqual(data.dataset.api_response, data.response)
 
         @data(Yearly())
-        def test_data_countries_attr(self, data):
+        def test_countries_attr(self, data):
             for row in data.response[1]:
                 country = row["country"]
-                self.assertEqual(data.dataset.data_countries[country["id"]],
+                self.assertEqual(data.dataset.countries[country["id"]],
                     country["value"])
 
         @data(Yearly(), Monthly(), Quarterly())
@@ -79,23 +79,23 @@ class TestIndicatorDatasetDataDatesFn(unittest.TestCase):
     @data(Yearly(), Monthly(), Quarterly())
     def test_dates_are_strings(self, data):
         exp_dates = sorted(list(set(row["date"] for row in data.response[1])))
-        self.assertEqual(data.dataset.data_dates(), exp_dates)
+        self.assertEqual(data.dataset.dates(), exp_dates)
 
     def test_datetime_param_yearly(self):
         data = Yearly()
-        results = data.dataset.data_dates(use_datetime=True)
+        results = data.dataset.dates(use_datetime=True)
         expected = [datetime.date(2011, 1, 1), datetime.date(2012, 1, 1)]
         self.assertEqual(results, expected)
 
     def test_datetime_param_monthly(self):
         data = Monthly()
-        results = data.dataset.data_dates(use_datetime=True)
+        results = data.dataset.dates(use_datetime=True)
         self.assertEqual(results[0], datetime.date(2013, 2, 1))
         self.assertEqual(results[-1], datetime.date(2013, 8, 1))
 
     def test_datetime_param_quarterly(self):
         data = Quarterly()
-        results = data.dataset.data_dates(use_datetime=True)
+        results = data.dataset.dates(use_datetime=True)
         self.assertEqual(results[0], datetime.date(2011, 4, 1))
         self.assertEqual(results[-1], datetime.date(2013, 7, 1))
 
@@ -107,58 +107,58 @@ class TestIndicatorDatasetDictFn(unittest.TestCase):
         def test_country_keys(self, data):
             resp = data.response[1]
             expected = sorted(list(set([row["country"]["id"] for row in resp])))
-            self.assertEqual(sorted(data.dataset.data_as_dict().keys()), 
+            self.assertEqual(sorted(data.dataset.as_dict().keys()), 
                 expected)
 
         def test_yearly_keys(self):
             data = Yearly()
-            for country_data in data.dataset.data_as_dict().values():
+            for country_data in data.dataset.as_dict().values():
                 self.assertEqual(sorted(country_data.keys()), 
                     ["2011", "2012"])
 
         def test_monthly_keys(self):
             data = Monthly()
-            first_country = data.dataset.data_as_dict().values()[0]
+            first_country = data.dataset.as_dict().values()[0]
             self.assertIn("2013M07", first_country.keys())
 
         def test_quarterly_keys(self):
             data = Quarterly()
-            first_country = data.dataset.data_as_dict().values()[0]
+            first_country = data.dataset.as_dict().values()[0]
             self.assertIn("2013Q2", first_country.keys())
 
         def test_yearly_datetime_param(self):
             data = Yearly()
-            results = data.dataset.data_as_dict(use_datetime=True).values()
+            results = data.dataset.as_dict(use_datetime=True).values()
             for country_data in results:
                 self.assertEqual(sorted(country_data.keys()),
                     [datetime.date(2011, 1, 1), datetime.date(2012, 1, 1)])
 
         def test_monthly_datetime_param(self):
             data = Monthly()
-            results = data.dataset.data_as_dict(use_datetime=True).values()
+            results = data.dataset.as_dict(use_datetime=True).values()
             first_country = results[0]
             self.assertIn(datetime.date(2013, 8, 1), first_country.keys())
 
         def test_quarterly_datetime_param(self):
             data = Quarterly()
-            results = data.dataset.data_as_dict(use_datetime=True).values()
+            results = data.dataset.as_dict(use_datetime=True).values()
             first_country = results[0]
             self.assertIn(datetime.date(2013, 4, 1), first_country.keys())
 
         def test_yearly_values(self):
             data = Yearly()
-            self.assertEqual(data.dataset.data_as_dict()["AR"]["2011"], 40728738)
-            self.assertEqual(data.dataset.data_as_dict()["GB"]["2012"], 63227526)
-            self.assertEqual(data.dataset.data_as_dict()["HK"]["2012"], 7154600)
+            self.assertEqual(data.dataset.as_dict()["AR"]["2011"], 40728738)
+            self.assertEqual(data.dataset.as_dict()["GB"]["2012"], 63227526)
+            self.assertEqual(data.dataset.as_dict()["HK"]["2012"], 7154600)
 
         def test_monthly_values(self):
             data = Monthly()
-            self.assertEqual(data.dataset.data_as_dict()["IN"]["2013M04"], 
+            self.assertEqual(data.dataset.as_dict()["IN"]["2013M04"], 
                 54.38226363636)
 
         def test_quarterly_values(self):
             data = Quarterly()
-            self.assertEqual(data.dataset.data_as_dict()["ES"]["2012Q4"], 
+            self.assertEqual(data.dataset.as_dict()["ES"]["2012Q4"], 
                 100.18916509029)
 
 
@@ -267,22 +267,22 @@ class TestIndicatorDatasets(TestIndicatorAPI):
         codes = ["SP.POP.TOTL"]
         countries = ["GB"]
         results = self.api.get_country_indicators(codes, countries)
-        self.assertEqual(results[0].data_countries.keys(), ["GB"])
+        self.assertEqual(results[0].countries.keys(), ["GB"])
 
     def test_language_kwarg(self):
         codes = ["SP.POP.GROW"]
         results = self.api.get_country_indicators(codes, language="FR")
-        self.assertIn("Royaume-Uni", results[0].data_countries.values())
+        self.assertIn("Royaume-Uni", results[0].countries.values())
 
     def test_date_kwarg(self):
         codes = ["SP.POP.GROW"]
         results = self.api.get_country_indicators(codes, date="2003")
-        self.assertEqual(results[0].data_dates(), ["2003"])
+        self.assertEqual(results[0].dates(), ["2003"])
 
     def test_mrv_kwarg(self):
         codes = ["SP.POP.TOTL"]
         results = self.api.get_country_indicators(codes, mrv=6)
-        self.assertEqual(len(results[0].data_dates()), 6)
+        self.assertEqual(len(results[0].dates()), 6)
 
     @data(True, "y")
     def test_gapfill_kwarg(self, gapfill):
@@ -290,13 +290,13 @@ class TestIndicatorDatasets(TestIndicatorAPI):
         codes = ["DPANUSIFS"]
         countries = ["BR"]
         results = self.api.get_country_indicators(codes, mrv=5, gapfill=gapfill)
-        self.assertEqual(len(results[0].data_dates()), 5)
+        self.assertEqual(len(results[0].dates()), 5)
 
     def test_frequency_kwarg(self):
         codes = ["DPANUSSPF"]
         results = self.api.get_country_indicators(codes, date="2009:2010",
                 mrv="2", frequency="M")
-        self.assertIn("2010M12", results[0].data_dates())
+        self.assertIn("2010M12", results[0].dates())
 
     def test_banned_kwarg(self):
         results = self.api.get_country_indicators(["SP.POP.TOTL"], per_page=5)

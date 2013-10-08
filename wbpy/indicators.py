@@ -22,12 +22,12 @@ class IndicatorDataset(object):
         self.api_response = json_resp
 
         # The country codes and names
-        self.data_countries = {}
+        self.countries = {}
         for country_data in self.api_response[1]:
             country_id = country_data["country"]["id"]
             country_val = country_data["country"]["value"]
-            if country_id not in self.data_countries:
-                self.data_countries[country_id] = country_val
+            if country_id not in self.countries:
+                self.countries[country_id] = country_val
 
         self.indicator_code = self.api_response[1][0]["indicator"]["id"]
         self.indicator_name = self.api_response[1][0]["indicator"]["value"]
@@ -48,11 +48,11 @@ class IndicatorDataset(object):
             )
 
     def __str__(self):
-        return pprint.pformat(self.data_as_dict())
+        return pprint.pformat(self.as_dict())
 
-    def data_dates(self, use_datetime=False):
+    def dates(self, use_datetime=False):
         dates = []
-        for country_data in self.data_as_dict().values():
+        for country_data in self.as_dict().values():
             for date in country_data.keys():
                 if date not in dates:
                     dates.append(date)
@@ -92,7 +92,7 @@ class IndicatorDataset(object):
         return self._metadata_response["topics"]
 
 
-    def data_as_dict(self, use_datetime=False):
+    def as_dict(self, use_datetime=False):
         clean_dict = {}
         response_data = self.api_response[1]
         for row in response_data:
