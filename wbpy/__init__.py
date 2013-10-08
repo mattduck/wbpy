@@ -1,10 +1,10 @@
 from indicators import IndicatorAPI, IndicatorDataset
-from climate import ClimateAPI, HistoricalDataset, ModelledDataset
+from climate import ClimateAPI, InstrumentalDataset, ModelledDataset
 
 __all__ = [
     IndicatorAPI,
     IndicatorDataset,
     ClimateAPI,
-    HistoricalDataset,
+    InstrumentalDataset,
     ModelledDataset,
     ]
