@@ -573,8 +573,5 @@ class IndicatorAPI(object):
         return filtered_data
 
     def _raise_if_response_contains_error(self, json_resp, url):
-        if len(json_resp) == 1:
-            str_resp = str(json_resp).lower()
-            if ("message" in str_resp) or ("pages: 0" in str_resp):
-                raise ValueError, utils.EXC_MSG % (url, json_resp)
-
+        if json_resp[0].get("pages") == 0 or json_resp[0].get("message"):
+            raise ValueError, utils.EXC_MSG % (url, json_resp)

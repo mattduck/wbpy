@@ -302,6 +302,12 @@ class TestGetDatasetFn(TestIndicatorAPI):
 
         self.assertRaises(ValueError, bad_request)
 
+    def test_another_bad_request_raises_exception(self):
+        # This one slipped through _raise_if_response_contains_error()
+        def request_with_no_data():
+            results = self.api.get_dataset("DPANUSIFS", date="2009:2010",
+                mrv="2", frequency="M")
+        self.assertRaises(ValueError, request_with_no_data)
 
 class TestInit(TestIndicatorAPI):
     def test_can_pass_own_cache_object(self):
