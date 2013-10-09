@@ -254,6 +254,13 @@ class TestInstumentalFn(TestClimateAPI):
         dataset = self.api.get_instrumental("pr", "decade", locs)
         self.assertTrue(dataset.api_call_date)
 
+    def test_multiple_locations(self):
+        locs = ["GB", 302]
+        dataset = self.api.get_instrumental("pr", "decade", locs)
+        regions = [resp["region"][0] for resp in dataset.api_calls]
+        self.assertIn("GB", regions)
+        self.assertIn("302", regions)
+
 @ddt
 class TestModelledFn(TestClimateAPI):
     def test_precip_type(self):
@@ -293,6 +300,13 @@ class TestModelledFn(TestClimateAPI):
         res = dataset.as_dict(sres="b1")
         self.assertEqual(res["ensemble_90"]["NZ"]["2065"][11], 
             14.541015999650355)
+
+    def test_multiple_locations(self):
+        locs = ["GB", 302]
+        dataset = self.api.get_modelled("pr", "aanom", locs)
+        regions = [resp["region"][0] for resp in dataset.api_calls]
+        self.assertIn("GB", regions)
+        self.assertIn("302", regions)
         
 
 class TestLocationCodes(TestClimateAPI):

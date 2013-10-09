@@ -324,11 +324,11 @@ class ClimateAPI(object):
         # If no exception from URL construction, make requests
         api_calls = []
         for loc, url in urls:
-            this_resp = {
-                "url": url,
-                "resp": json.loads(self.fetch(url))
-                }
-            api_calls.append(this_resp)
+            resp = json.loads(self.fetch(url))
+            api_calls.append(dict(
+                url=url,
+                resp=resp,
+                ))
 
         call_date = datetime.datetime.now().date()
         return InstrumentalDataset(api_calls, data_interval=interval, 
@@ -346,15 +346,13 @@ class ClimateAPI(object):
         # Derivived statistic requests are all of the "ensemble" kind, and they
         # have a different set of dates to GCM requests.
         if data_type in ["pr", "tas"]:
-            urls = ["v1/{0}/{1}/{2}/{3}/{4}/{5}",
+            all_urls = ["v1/{0}/{1}/{2}/{3}/{4}/{5}",
                 "v1/{0}/{1}/ensemble/{2}/{3}/{4}/{5}"]
-            dates = self._valid_modelled_dates
+            all_dates = self._valid_modelled_dates
         else:
-            urls = ["v1/{0}/{1}/ensemble/{2}/{3}/{4}/{5}"]
-            dates = self._valid_stat_dates
+            all_urls = ["v1/{0}/{1}/ensemble/{2}/{3}/{4}/{5}"]
+            all_dates = self._valid_stat_dates
 
-        dates_and_url_structures = itertools.product(dates, urls)
-            
         api_calls = []
         for loc in locations:
             try:
@@ -364,18 +362,18 @@ class ClimateAPI(object):
                 loc = utils.convert_country_code(loc, "alpha3")
                 loc_type = "country"
 
-            for dates, url in dates_and_url_structures:
+            for dates, url in itertools.product(all_dates, all_urls):
                 start_date = dates[0]
                 end_date = dates[1]
                 rest_url = url.format(loc_type, interval, data_type,
                     start_date, end_date, loc)
                 full_url = "".join([self.BASE_URL, rest_url])
 
-                resp = {
-                    "url": full_url,
-                    "resp": json.loads(self.fetch(full_url))
-                    }
-                api_calls.append(resp)
+                resp = json.loads(self.fetch(full_url))
+                api_calls.append(dict(
+                    url=full_url,
+                    resp=resp,
+                    ))
 
         call_date = datetime.datetime.now().date()
         return ModelledDataset(api_calls, data_interval=interval, 
