@@ -227,7 +227,6 @@ class TestModelledModelDictFn(unittest.TestCase):
         self.assertEqual(res, 12.463586228230714)
 
 
-
 class TestClimateAPI(unittest.TestCase):
     def setUp(self):
         self.api = wbpy.ClimateAPI()
@@ -300,6 +299,13 @@ class TestModelledFn(TestClimateAPI):
         res = dataset.as_dict(sres="b1")
         self.assertEqual(res["ensemble_90"]["NZ"]["2065"][11], 
             14.541015999650355)
+
+    def test_bad_request_raises_exc(self):
+        def bad_req():
+            locs = ["GB", "303"]
+            dataset = self.api.get_modelled("prr", "mavg", locs)
+
+        self.assertRaises(AssertionError, bad_req)
 
     def test_multiple_locations(self):
         locs = ["GB", 302]

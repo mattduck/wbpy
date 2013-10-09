@@ -306,6 +306,9 @@ class ClimateAPI(object):
         data_type = self._clean_api_code(data_type)
         interval = self._clean_api_code(interval)
 
+        assert data_type in self.ARG_DEFINITIONS["instrumental_types"]
+        assert interval in self.ARG_DEFINITIONS["instrumental_intervals"]
+
         # Construct URLs
         urls = []
         for loc in locations:
@@ -338,6 +341,9 @@ class ClimateAPI(object):
     def get_modelled(self, data_type, interval, locations):
         data_type = self._clean_api_code(data_type)
         interval = self._clean_api_code(interval)
+
+        assert data_type in self.ARG_DEFINITIONS["modelled_types"]
+        assert interval in self.ARG_DEFINITIONS["modelled_intervals"]
 
         # As there aren't many variants of each data type, it's simplest to
         # always call both GCM and ensemble data, for all dates, and not offer
