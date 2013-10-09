@@ -401,31 +401,37 @@ class TestCountryCodes(TestIndicatorAPI):
         self.assertEqual(data["US"]["name"], "United States")
         self.assertEqual(data["AF"]["name"], "Afghanistan")
 
-    def test_documentation_claim_that_nonstandard_codes_used_is_false(self):
-        countries = [
-            # The API documentation claims that these countries use either
-            # non-standard alpha-2 or alpha-3 codes. This test tries
-            # all the official alpha-2 and alpha-3 values. If it fails, we 
-            # need to convert them, so that the Indicators() class supports
-            # all the offical codes.
-            ("andorra", "ad", "and"),
-            ("serbia", "rs", "srb"),
-            ("congo, dem", "cd", "cod"),
-            ("isle of man", "im", "imn"),
-            ("romania", "ro", "rou"),
-            ("timor-leste", "tl", "tls"),
-            ("gaza", "ps", "pse"),
+    # There are various non-standard 2-digit and 3-digit codes used for
+    # regions. Test a couple of them to make sure that they're getting
+    # converted. 
+    #
+    # The API docs claim that these codes are non-standard, but that doesn't
+    # seem to be the case:
+    # 
+    # ("andorra", "ad", "and"),
+    # ("serbia", "rs", "srb"),
+    # ("congo, dem", "cd", "cod"),
+    # ("isle of man", "im", "imn"),
+    # ("romania", "ro", "rou"),
+    # ("timor-leste", "tl", "tls"),
+    # ("gaza", "ps", "pse"),
 
-            # These are actually not standard - they don't have 
-            # ISO 1366 entries
-            ("channel islands", "jg", "chi"),
-            ("kosovo", "kv", "ksv"),
-            ]
+    def test_alpha2_kosovo(self):
+        codes = ["kv"]
+        data = self.api.get_countries(codes)
+        self.assertEqual(data["KV"]["name"], "Kosovo")
 
-        for name, iso2, iso3 in countries:
-            for code in [iso2, iso3]:
-                data = self.api.get_countries([code])
-                self.assertIn(name.lower(), 
-                    data[iso2.upper()]["name"].lower())
-                self.assertEqual(len(data), 1)
+    def test_alpha3_kosovo(self):
+        codes = ["ksv"]
+        data = self.api.get_countries(codes)
+        self.assertEqual(data["KV"]["name"], "Kosovo")
 
+    def test_alpha2_arab_world(self):
+        codes = ["1a"]
+        data = self.api.get_countries(codes)
+        self.assertEqual(data["1A"]["name"], "Arab World")
+
+    def test_alpha3_arab_world(self):
+        codes = ["arb"]
+        data = self.api.get_countries(codes)
+        self.assertEqual(data["1A"]["name"], "Arab World")

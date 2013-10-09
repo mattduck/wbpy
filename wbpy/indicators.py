@@ -118,12 +118,8 @@ class IndicatorAPI(object):
 
     BASE_URL = "http://api.worldbank.org/"
 
-    # The API uses some non-ISO 2-digit and 3-digit codes for regions. Make
-    # them accessible so users don't have to keep referring to API docs.
-    NONSTANDARD_CODES = {
-        "JG": {"name": "Channel Islands", "3-digit": "CHI"},
-        "KV": {"name": "Kosovo", "3-digit": "KSV"}
-        }
+    # The API uses some non-ISO 2-digit and 3-digit codes. Make them available.
+    NON_STANDARD_REGIONS = utils.NON_STANDARD_REGIONS
 
     def __init__(self, fetch=None):
         """ You can override the default tempfile cache by passing a function,

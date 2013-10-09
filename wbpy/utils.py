@@ -6,12 +6,23 @@ import time
 import logging
 import datetime
 import hashlib
+import json
 
 import pycountry # For ISO 1366 code conversions
 
 logger = logging.getLogger(__name__)
 
 EXC_MSG = "The URL %s returned a bad response: %s"
+
+# The Indicators API (but not Climate API) uses a few non-ISO 2-digit and
+# 3-digit codes, for either regions or groups of regions. Make them accessible
+# so that they can be converted, and users can see them.
+#
+# The file contains the results of IndicatorAPI.get_countries(), with all the
+# ISO countries excluded.
+path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 
+    "non_ISO_region_codes.json")
+NON_STANDARD_REGIONS = json.loads(open(path).read())
 
 
 def fetch(url):
@@ -44,15 +55,6 @@ def fetch(url):
     return response
 
 
-# The Indicators API (but not Climate API) uses a couple of non-ISO 2-digit
-# and 3-digit codes for regions. Make these accessible so they can be
-# converted, and users can see them.
-NON_STANDARD_CODES = [
-    {"alpha2": "KV", "alpha3": "KSV", "name": "Kosovo"}, 
-    {"alpha2": "JG", "alpha3": "CHI", "name": "Channel Islands"}, 
-    ]
-
-
 def convert_country_code(code, return_alpha):
     """ Convert an ISO 1366 alpha-2 or alpha-3 code into either alpha-2 or
     alpha-3. 
@@ -77,9 +79,13 @@ def convert_country_code(code, return_alpha):
 
     except (KeyError, ValueError):
         # Try the world bank non-standard codes
-        for row in NON_STANDARD_CODES:
-            if code in row:
-                return row[return_alpha]
+        if return_alpha == "alpha2" and code in NON_STANDARD_REGIONS:
+            return NON_STANDARD_REGIONS[code]["id"]
+
+        elif return_alpha == "alpha3":
+            for alpha2, vals in NON_STANDARD_REGIONS.items():
+                if vals["id"] == code:
+                    return alpha2
 
         # No match found
         return code
