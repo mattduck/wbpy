@@ -256,57 +256,49 @@ class TestIndicators(TestIndicatorAPI):
 
 
 @ddt
-class TestIndicatorDatasets(TestIndicatorAPI):
-    def test_get_country_indicators_returns_datasets(self):
-        codes = ["SP.POP.TOTL", "SP.POP.GROW"]
-        results = self.api.get_country_indicators(codes)
-        self.assertEqual(results[0].indicator_code, codes[0])
-        self.assertEqual(results[1].indicator_code, codes[1])
+class TestGetDatasetFn(TestIndicatorAPI):
+    def test_get_dataset_returns_dataset(self):
+        results = self.api.get_dataset("SP.POP.GROW")
+        self.assertEqual(results.indicator_code, "SP.POP.GROW")
 
     def test_country_list(self):
-        codes = ["SP.POP.TOTL"]
         countries = ["GB"]
-        results = self.api.get_country_indicators(codes, countries)
-        self.assertEqual(results[0].countries.keys(), ["GB"])
+        results = self.api.get_dataset("SP.POP.TOTL", countries)
+        self.assertEqual(results.countries.keys(), ["GB"])
 
     def test_language_kwarg(self):
-        codes = ["SP.POP.GROW"]
-        results = self.api.get_country_indicators(codes, language="FR")
-        self.assertIn("Royaume-Uni", results[0].countries.values())
+        results = self.api.get_dataset("SP.POP.TOTL", language="FR")
+        self.assertIn("Royaume-Uni", results.countries.values())
 
     def test_date_kwarg(self):
-        codes = ["SP.POP.GROW"]
-        results = self.api.get_country_indicators(codes, date="2003")
-        self.assertEqual(results[0].dates(), ["2003"])
+        results = self.api.get_dataset("SP.POP.GROW", date="2003")
+        self.assertEqual(results.dates(), ["2003"])
 
     def test_mrv_kwarg(self):
-        codes = ["SP.POP.TOTL"]
-        results = self.api.get_country_indicators(codes, mrv=6)
-        self.assertEqual(len(results[0].dates()), 6)
+        results = self.api.get_dataset("SP.POP.GROW", mrv=6)
+        self.assertEqual(len(results.dates()), 6)
 
     @data(True, "y")
     def test_gapfill_kwarg(self, gapfill):
         # Using the API docs gapfill example
-        codes = ["DPANUSIFS"]
         countries = ["BR"]
-        results = self.api.get_country_indicators(codes, mrv=5, gapfill=gapfill)
-        self.assertEqual(len(results[0].dates()), 5)
+        results = self.api.get_dataset("DPANUSIFS", mrv=5,
+            gapfill=gapfill)
+        self.assertEqual(len(results.dates()), 5)
 
     def test_frequency_kwarg(self):
-        codes = ["DPANUSSPF"]
-        results = self.api.get_country_indicators(codes, date="2009:2010",
+        results = self.api.get_dataset("DPANUSSPF", date="2009:2010",
                 mrv="2", frequency="M")
-        self.assertIn("2010M12", results[0].dates())
+        self.assertIn("2010M12", results.dates())
 
     def test_banned_kwarg(self):
-        results = self.api.get_country_indicators(["SP.POP.TOTL"], per_page=5)
-        self.assertNotIn("per_page=5", results[0].api_url.lower())
-        self.assertIn("per_page=1000", results[0].api_url.lower())
+        results = self.api.get_dataset("SP.POP.TOTL", per_page=5)
+        self.assertNotIn("per_page=5", results.api_url.lower())
+        self.assertIn("per_page=1000", results.api_url.lower())
 
     def test_bad_request_raises_exception(self):
         def bad_request():
-            codes = ["SP,lkjsdf"]
-            self.api.get_country_indicators(codes)
+            self.api.get_dataset("SP,lkjsdf")
 
         self.assertRaises(ValueError, bad_request)
 

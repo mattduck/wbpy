@@ -132,7 +132,7 @@ class IndicatorAPI(object):
     # PUBLIC METHODS
     # ========================================================================
 
-    def get_country_indicators(self, indicator_codes, country_codes=None, 
+    def get_dataset(self, indicator, country_codes=None, 
             **kwargs):
         """ Get specific indicator data for countries.
 
@@ -157,16 +157,14 @@ class IndicatorAPI(object):
             country_string = ";".join(country_codes)
         else:
             country_string = "all"
-        for indicator_string in indicator_codes:
-            url = "countries/{0}/indicators/{1}?".format(country_string, 
-                    indicator_string)
-            url = self._generate_indicators_url(url, **kwargs)
-            call_date = datetime.datetime.now()
-            json_resp = json.loads(self.fetch(url))
-            self._raise_if_response_contains_error(json_resp, url)
 
-            datasets.append(IndicatorDataset(json_resp, url, call_date))
-        return datasets
+        url = "countries/{0}/indicators/{1}?".format(country_string, 
+                indicator)
+        url = self._generate_indicators_url(url, **kwargs)
+        call_date = datetime.datetime.now()
+        json_resp = json.loads(self.fetch(url))
+        self._raise_if_response_contains_error(json_resp, url)
+        return IndicatorDataset(json_resp, url, call_date)
 
     def get_indicators(self, indicator_codes=None, search=None,
             search_full=False, common_only=False, **kwargs):
