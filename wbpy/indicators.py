@@ -162,7 +162,7 @@ class IndicatorAPI(object):
         url = "countries/{0}/indicators/{1}?".format(country_string, 
                 indicator)
         url = self._generate_indicators_url(url, **kwargs)
-        call_date = datetime.datetime.now()
+        call_date = datetime.datetime.now().date()
         json_resp = json.loads(self.fetch(url))
         self._raise_if_response_contains_error(json_resp, url)
         return IndicatorDataset(json_resp, url, call_date)
