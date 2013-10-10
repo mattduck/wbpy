@@ -3,6 +3,7 @@ import numbers
 import re
 import datetime
 import pprint
+import urllib
 try:
     import simplejson as json
 except ImportError:
@@ -478,31 +479,23 @@ class IndicatorAPI(object):
         options = []
         if "source" in kwargs:
             rest_url = "".join(["source/", str(kwargs["source"]), "/", 
-                                rest_url])
+                rest_url])
             del(kwargs["source"])
+
         if "topic" in kwargs:
             rest_url = "".join(["topic/", str(kwargs["topic"]), "/", 
-                                rest_url])
+                rest_url])
             del(kwargs["topic"])
+
         # Prepend language last, as it should be at front of url.
         if "language" in kwargs:
             rest_url = "{}/".format(kwargs["language"]) + rest_url
             del(kwargs["language"])
 
-        if "gapfill" in kwargs:
-            if kwargs["gapfill"] is True:
-                kwargs["gapfill"] = "Y"
+        if kwargs.get("gapfill") is True:
+            kwargs["gapfill"] = "Y"
 
-        # Other options can be passed to the query string,
-        # with numbers / lists converted to the right format for the url.
-        for k, v in kwargs.items():
-            if isinstance(v, numbers.Number):
-                v = str(v)
-            if not isinstance(v, basestring): 
-                v = ";".join([str(x) for x in v]) 
-            options.append(u"{0}={1}".format(k, v))
-
-        query_string = "&".join(options)
+        query_string = urllib.urlencode(kwargs)
         new_url = "".join([self.BASE_URL, rest_url, query_string])
         return new_url
 
