@@ -230,7 +230,8 @@ class TestIndicators(TestIndicatorAPI):
 
     def test_common_only_flag_filters_out_codes(self):
         data = self.api.get_indicators(common_only=True)
-        self.assertTrue(len(data) < 2000 and len(data) > 5)
+        self.assertGreater(len(data), 5)
+        self.assertLess(len(data), 2000)
 
     def test_topic_kwarg(self):
         results = self.api.get_indicators(topic=4)

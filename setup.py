@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*-coding: utf-8 -*-
+import sys
 import re
 try:
     from setuptools import setup
@@ -7,6 +9,10 @@ except ImportError:
 
 init_py = open("wbpy/__init__.py").read()
 METADATA = dict(re.findall("__([a-z]+)__ = \"([^\"]+)\"", init_py))
+
+kw = {}
+if sys.version_info >= (3,):
+    kw["use_2to3"] = True
 
 setup(  
     name=METADATA["name"],
@@ -17,7 +23,7 @@ setup(
     description="A Python interface to the World Bank Indicators and Climate APIs",
     long_description=open('README.rst').read(),
     url="https://github.com/mattduck/wbpy",
-    packages=['wbpy'],
+    packages=['wbpy', 'wbpy.tests'],
     provides=['wbpy'],
     package_data={"wbpy": ["non_ISO_region_codes.json"]},
     install_requires=['pycountry'],
@@ -29,5 +35,5 @@ setup(
          'Operating System :: OS Independent', 
          'Programming Language :: Python', 
          'Topic :: Scientific/Engineering', 
-        ]
-    )
+        ],
+    **kw)

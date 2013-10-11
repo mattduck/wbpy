@@ -37,7 +37,7 @@ class TestClimateDataBasicAttrs(unittest.TestCase):
     def test_api_call_responses(self, data):
         expected_resps = [x["resp"] for x in data.data]
         dataset_resps = [x["resp"] for x in data.dataset.api_calls]
-        self.assertEqual(sorted(expected_resps), sorted(dataset_resps))
+        self.assertEqual(expected_resps, dataset_resps)
 
     @data(InstrumentalMonth(), InstrumentalYear(), InstrumentalDecade())
     def test_type_attr(self, data):

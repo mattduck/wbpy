@@ -34,7 +34,9 @@ def fetch(url):
         logger.debug("Created cache directory " + cache_dir)
 
     logger.debug("Fetching url: %s ...", url)
-    url_hash = hashlib.md5(url).hexdigest()
+
+    # Python3 hashlib requires bytestring
+    url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()
 
     # If the cache file is < one day old, return cache, else get new response.
     cache_path = os.path.join(cache_dir, url_hash)
@@ -42,11 +44,11 @@ def fetch(url):
         seconds_in_day = 86400
         if int(time.time()) - os.path.getmtime(cache_path) < seconds_in_day:
             logger.debug("Retrieving web response from cache.")
-            return open(cache_path, "rb").read()
+            return open(cache_path, "rb").read().decode("utf-8")
 
     logger.debug("URL not found in cache. Getting web response...")
-    response = urllib2.urlopen(url).read()
-    fd, tempname = tempfile.mkstemp()
+    response = urllib2.urlopen(url).read().decode("utf-8")
+    fd, tempname = tempfile.mkstemp(text=True)
     fp = os.fdopen(fd, "w")
     fp.write(response)
     fp.close()
