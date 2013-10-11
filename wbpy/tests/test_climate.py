@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
-import unittest
 import datetime
+try:
+    # py2.6
+    import unittest2 as unittest
+except ImportError:
+    # py2.7+
+    import unittest
 
 from ddt import ddt, data
 

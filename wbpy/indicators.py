@@ -419,7 +419,7 @@ class IndicatorAPI(object):
                 main_value = v.get("name", v.get("value", v))
             else:
                 main_value = v
-            print u"{:30} {}".format(k, main_value)
+            print u"{0:30} {1}".format(k, main_value)
 
 
     def search_results(self, regexp, results, key=None):
@@ -460,7 +460,7 @@ class IndicatorAPI(object):
         """ Adds API root and query string options to an otherwise complete 
         endpoint, eg. "incomeLevel?", or "lendingType?key=val".
         """
-        kwargs = {k.lower(): v for k, v in kwargs.items()}
+        kwargs = dict([(k.lower(), v) for k, v in kwargs.items()])
         assert not (kwargs.has_key("topic") and kwargs.has_key("source"))
 
         # Fix any API options that shouldn't be accessible via wbpy.
@@ -489,7 +489,7 @@ class IndicatorAPI(object):
 
         # Prepend language last, as it should be at front of url.
         if "language" in kwargs:
-            rest_url = "{}/".format(kwargs["language"]) + rest_url
+            rest_url = "{0}/".format(kwargs["language"]) + rest_url
             del(kwargs["language"])
 
         if kwargs.get("gapfill") is True:
