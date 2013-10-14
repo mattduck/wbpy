@@ -1,4 +1,4 @@
-include *.rst *.txt LICENSE
-graft tests
+include *.rst *.txt LICENSE tox.ini
+include wbpy/tests/*.py
 graft docs
 prune docs/_*
