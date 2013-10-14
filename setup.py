@@ -26,7 +26,8 @@ setup(
     packages=['wbpy', 'wbpy.tests'],
     provides=['wbpy'],
     package_data={"wbpy": ["non_ISO_region_codes.json"]},
-    install_requires=['pycountry'],
+    install_requires=["pycountry"],
+    tests_require=["tox"],
     classifiers=[
         'Development Status :: 4 - Beta',
          'Intended Audience :: Developers', 

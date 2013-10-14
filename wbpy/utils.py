@@ -25,7 +25,7 @@ path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 NON_STANDARD_REGIONS = json.loads(open(path).read())
 
 
-def fetch(url):
+def fetch(url, check_cache=True, cache_response=True):
     """ Cache function, take a url and return the response. """
     # Use system tempfile for cache path. 
     cache_dir = os.path.join(tempfile.gettempdir(), "wbpy")
@@ -37,24 +37,29 @@ def fetch(url):
 
     # Python3 hashlib requires bytestring
     url_hash = hashlib.md5(url.encode("utf-8")).hexdigest()
+    cache_path = os.path.join(cache_dir, url_hash)
 
     # If the cache file is < one day old, return cache, else get new response.
-    cache_path = os.path.join(cache_dir, url_hash)
-    if os.path.exists(cache_path):
-        seconds_in_day = 86400
-        if int(time.time()) - os.path.getmtime(cache_path) < seconds_in_day:
-            logger.debug("Retrieving web response from cache.")
-            return open(cache_path, "rb").read().decode("utf-8")
+    if check_cache:
+        if os.path.exists(cache_path):
+            seconds_in_day = 86400
+            if int(time.time()) - os.path.getmtime(cache_path) < seconds_in_day:
+                logger.debug("Retrieving web response from cache.")
+                return open(cache_path, "rb").read().decode("utf-8")
 
     logger.debug("URL not found in cache. Getting web response...")
-    response = urllib2.urlopen(url).read().decode("utf-8")
-    fd, tempname = tempfile.mkstemp(text=True)
+    response = urllib2.urlopen(url).read()
+    if cache_response:
+        _cache_response(response, url, cache_path)
+    return response.decode("utf-8")
+
+def _cache_response(response, url, cache_path):
+    fd, tempname = tempfile.mkstemp()
     fp = os.fdopen(fd, "w")
-    fp.write(response)
+    fp.write(response.decode("utf-8"))
     fp.close()
     os.rename(tempname, cache_path)
     logger.debug("New url saved to cache: %s" % url)
-    return response
 
 
 def convert_country_code(code, return_alpha):
