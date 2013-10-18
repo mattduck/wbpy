@@ -161,7 +161,7 @@ class IndicatorAPI(object):
 
         url = "countries/{0}/indicators/{1}?".format(country_string,
                 indicator)
-        url = self._generate_indicators_url(url, **kwargs)
+        url = self._generate_indicators_url(url, dataset_params=True, **kwargs)
         call_date = datetime.datetime.now().date()
         json_resp = json.loads(self.fetch(url))
         self._raise_if_response_contains_error(json_resp, url)
@@ -455,7 +455,7 @@ class IndicatorAPI(object):
     # ========================================================================
     # PRIVATE METHODS
     # ========================================================================
-    def _generate_indicators_url(self, rest_url, **kwargs):
+    def _generate_indicators_url(self, rest_url, dataset_params=False, **kwargs):
         """Adds API root and query string options to an otherwise complete
         endpoint, eg.
 
@@ -473,9 +473,13 @@ class IndicatorAPI(object):
             if k in kwargs.keys():
                 del(kwargs[k])
 
-        # If no dates given, use most recent value
-        if all(key not in kwargs.keys() for key in ["mrv", "date"]):
-            kwargs["mrv"] = 1
+        # The dataset call has some extra query params
+        if dataset_params:
+            # If no dates given, use most recent value
+            if all(key not in kwargs.keys() for key in ["mrv", "date"]):
+                kwargs["mrv"] = 1
+            if kwargs.get("gapfill") is True:
+                kwargs["gapfill"] = "Y"
 
         # Some options are part of the url structure.
         if "source" in kwargs:
@@ -492,9 +496,6 @@ class IndicatorAPI(object):
         if "language" in kwargs:
             rest_url = "{0}/".format(kwargs["language"]) + rest_url
             del(kwargs["language"])
-
-        if kwargs.get("gapfill") is True:
-            kwargs["gapfill"] = "Y"
 
         # The kwarg dict doesn't guarantee order, and we want the same args to
         # always generate the same URL (for caching purposes), so need to
