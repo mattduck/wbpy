@@ -1,5 +1,8 @@
-Indicators methods
-==================
+Indicator API
+=============
 
-.. autoclass:: wbpy.Indicators
+.. autoclass:: wbpy.IndicatorDataset
+    :members:
+
+.. autoclass:: wbpy.IndicatorAPI
     :members:

@@ -27,7 +27,7 @@ NON_STANDARD_REGIONS = json.loads(open(path).read())
 
 
 def fetch(url, check_cache=True, cache_response=True):
-    """Cache function, take a url and return the response."""
+    """Return response from a URL, and cache results for one day."""
     # Use system tempfile for cache path.
     cache_dir = os.path.join(tempfile.gettempdir(), "wbpy")
     if not os.path.exists(cache_dir):
@@ -80,14 +80,14 @@ def _cache_response(response, url, cache_path):
 
 
 def convert_country_code(code, return_alpha):
-    """ Convert an ISO 1366 alpha-2 or alpha-3 code into either alpha-2 or
-    alpha-3.
+    """Convert ISO code into either alpha-2 or alpha-3.
 
     :param code:
         The code to convert. If it isn't a valid ISO code, it gets returned as
         given.
+
     :param return_alpha:
-        `2` or `3`, the returned format.
+        "alpha2" or "alpha3".
 
     """
     try:

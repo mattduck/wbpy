@@ -1,5 +1,11 @@
-Climate methods
-==================
+Climate API
+===========
 
-.. autoclass:: wbpy.Climate
+.. autoclass:: wbpy.InstrumentalDataset
+    :members:
+
+.. autoclass:: wbpy.ModelledDataset
+    :members:
+
+.. autoclass:: wbpy.ClimateAPI
     :members:

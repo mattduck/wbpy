@@ -24,6 +24,15 @@ class ClimateDataset(object):
         :param api_calls:
             List of dicts with the keys "url" and "resp". Necessary as multiple
             responses can form one dataset.
+
+        :param data_type:
+            eg. ``pr``, ``tas``, ``tmin_means`` 
+
+        :param data_interval:
+            eg. ``mavg``, ``decade``
+
+        :param call_date:
+            Date of the url call
         """
         self.api_call_date = call_date
         self.api_calls = api_calls
@@ -74,6 +83,14 @@ class InstrumentalDataset(ClimateDataset):
                 "years, as the year 1900 is not included. "
 
     def as_dict(self, use_datetime=False):
+        """Return dataset data as dictionary.
+
+        Keys are: data[location][date]
+
+        :param use_datetime:
+            Use datetime.date() objects for date keys, instead of strings.
+
+        """
         results = {}
 
         if self.interval == "month":
@@ -129,6 +146,12 @@ class ModelledDataset(ClimateDataset):
             self.control_period = ("1961", "2000")
 
     def dates(self, use_datetime=False):
+        """Return dataset date start/end pairs.
+
+        :param use_datetime:
+            If True, return dates as datetime.date() object instead of strings.
+
+        """
         dates = set()
         all_urls = [call["url"] for call in self.api_calls]
         for url in all_urls:
@@ -140,6 +163,18 @@ class ModelledDataset(ClimateDataset):
         return sorted(list(dates))
 
     def as_dict(self, sres="a2", use_datetime=False):
+        """Return dataset data as dictionary.
+
+        Keys are: data[gcm][location][date]
+
+        :param sres:
+            Which SRES to use for future values. The API supports A2 and B1,
+            although not all GCMs have data for both.
+
+        :param use_datetime:
+            Use datetime.date() objects for date keys, instead of strings.
+
+        """
         results = {}
         for call in self.api_calls:
             if "ensemble" in call["url"]:
@@ -183,6 +218,8 @@ class ModelledDataset(ClimateDataset):
 
 
 class ClimateAPI(object):
+
+    """Access the World Bank Climate API."""
 
     _gcm = dict(
         bccr_bcm2_0="BCM 2.0",
@@ -290,10 +327,9 @@ class ClimateAPI(object):
     BASE_URL = "http://climatedataapi.worldbank.org/climateweb/rest/"
 
     def __init__(self, fetch=None):
-        """A connection to the World Bank Climate API.
+        """You can override the default tempfile cache by passing a ``fetch``
+        function, which fetches a url and returns a string.
 
-        You can override the default tempfile cache by passing a
-        ``fetch`` function, which fetches a url and returns a string.
         ``self.fetch`` can also be set after instantiation.
 
         """
@@ -305,6 +341,19 @@ class ClimateAPI(object):
         return ClimateAPI._shorthand_codes.get(code, code)
 
     def get_instrumental(self, data_type, interval, locations):
+        """Get historical data for temperature or precipitation.
+
+        :param data_type:
+            Either ``pr`` for precipitation, or ``tas`` for temperature.
+
+        :param interval:
+            Either ``year``, ``month`` or ``decade``.
+
+        :param locations:
+            A list of API location codes - either ISO alpha-2 or alpha-3
+            country codes, or basin ID numbers.
+
+        """
         data_type = self._clean_api_code(data_type)
         interval = self._clean_api_code(interval)
 
@@ -340,6 +389,21 @@ class ClimateAPI(object):
             data_type=data_type, call_date=call_date)
 
     def get_modelled(self, data_type, interval, locations):
+        """Get modelled data for precipitation or temperature.
+
+        :param data_type:
+            The data statistic ID. See
+            ``self.ARG_DEFINITIONS["modelled_types"]`` for IDs and values.
+
+        :param interval:
+            The interval ID. See ``self.ARG_DEFINITIONS["modelled_intervals"]``
+            for IDs and values.
+
+        :param locations:
+            A list of API location codes - either ISO alpha-2 or alpha-3
+            country codes, or basin ID numbers.
+
+        """
         data_type = self._clean_api_code(data_type)
         interval = self._clean_api_code(interval)
 

@@ -15,7 +15,7 @@ class IndicatorDataset(object):
 
     """A single World Bank Indicator dataset.
 
-    Includes the raw JSON response, various metadata, and methods to
+    Includes the raw JSON API response, various metadata, and methods to
     convert the data into useful objects.
 
     """
@@ -55,6 +55,13 @@ class IndicatorDataset(object):
         return pprint.pformat(self.as_dict())
 
     def dates(self, use_datetime=False):
+        """Return list of dates used in the dataset.
+
+        :param use_datetime:
+            If True, return dates as datetime.date() objects, rather than
+            strings.
+
+        """
         dates = []
         for country_data in self.as_dict().values():
             for date in country_data.keys():
@@ -67,6 +74,7 @@ class IndicatorDataset(object):
         return sorted(dates)
 
     def _get_metadata_response(self):
+        """Lazy loading of the dataset's indicator metadata from the API."""
         api = IndicatorAPI()
         indicators = api.get_indicators([self.indicator_code])
         self._metadata_response = indicators[self.indicator_code]
@@ -96,6 +104,14 @@ class IndicatorDataset(object):
         return self._metadata_response["topics"]
 
     def as_dict(self, use_datetime=False):
+        """Return dictionary of the dataset's data.
+
+        Keys are: data[country_code][date]
+
+        :param use_datetime:
+            Use datetime.date() object as the date key, rather than string.
+
+        """
         clean_dict = {}
         response_data = self.api_response[1]
         for row in response_data:
@@ -135,21 +151,25 @@ class IndicatorAPI(object):
     # ========================================================================
     def get_dataset(self, indicator, country_codes=None,
             **kwargs):
-        """Get specific indicator data for countries.
+        """Request a dataset from the API.
 
-        :param indicator_codes:     Required list of API indicator codes.
+        :param indicator:
+            The API indicator code, eg. SP.POP.TOTL for total population.
 
-        :param country_codes:   List of countries to get data for.
-                                If None, queries all countries.
+        :param country_codes:
+            List of ISO 1366 alpha-2 or alpha-3 country codes. If None, returns
+            data for all countries.
 
-        :param kwargs:      These map directly to the API query args:
-                            *Language*,
-                            *date*,
-                            *mrv*,
-                            *gapfill*,
-                            *frequency*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
+            ``date``
+            ``mrv``
+            ``gapfill``
+            ``frequency``
 
-        :returns:   Namedtuple with *data*, *countries* and *indicators* attrs.
+        :returns:
+            IndicatorDataset instance containing the dataset and metadata.
 
         """
         if country_codes:
@@ -164,31 +184,37 @@ class IndicatorAPI(object):
         url = self._generate_indicators_url(url, dataset_params=True, **kwargs)
         call_date = datetime.datetime.now().date()
         json_resp = json.loads(self.fetch(url))
-        self._raise_if_response_contains_error(json_resp, url)
+        self._raise_if_bad_response(json_resp, url)
         return IndicatorDataset(json_resp, url, call_date)
 
     def get_indicators(self, indicator_codes=None, search=None,
             search_full=False, common_only=False, **kwargs):
-        """Get metadata on specific World Bank indicators.
+        """Request metadata on specific World Bank indicators.
 
-        :param indicator_codes: List of codes, eg. SP.POP.TOTL for population.
-                                If None, queries all (~8000).
+        :param indicator_codes:
+            A list of codes to get metadata for, eg. ["SP.POP.GROW"]. If None,
+            all indicators are returned (~8000)
 
-        :param common_only:     Many of the indicators do not have wide country
-                                coverage. If True, filters out those
-                                indicators that do not appear on the
-                                main World Bank website (leaving ~1500).
+        :param common_only:
+            Many of the indicators do not have wide data coverage. If True,
+            filter out the ~6500 indicators that do not appear on the main
+            World Bank website (http://data.worldbank.org/indicators/all),
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*,
-                            *source*,
-                            *topic*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
+            ``source``
+            ``topic``
 
-        :returns:   Dictionary of indicators with API IDs as keys.
+        :returns:
+            Dictionary of indicators and their metadata, with their IDs as
+            keys.
 
         """
         func_params = {
@@ -223,23 +249,28 @@ class IndicatorAPI(object):
 
     def get_countries(self, country_codes=None, search=None,
             search_full=False, **kwargs):
-        """Get info on countries, eg. ISO codes, longitude/latitude, capital
-        city, income level, etc.
+        """Request country metadata.
+        
+        eg. ISO code, coordinates, capital, income level, etc.
 
-        :param country_code:    List of 2 or 3 letter ISO codes. If None,
-                                queries all.
+        :param country_codes:
+            List of alpha-2 or alpha-3 codes. If None, queries all countries.
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*,
-                            *incomeLevel*,
-                            *lendingType*,
-                            *region*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
+            ``incomeLevel``
+            ``lendingType``
+            ``region``
 
-        :returns:   Dictionary of countries using 2-letter ISO codes as keys.
+        :returns:
+            Dictionary of metadata with alpha-2 codes as keys.
 
         """
         func_params = {
@@ -257,19 +288,23 @@ class IndicatorAPI(object):
 
     def get_income_levels(self, income_codes=None, search=None,
             search_full=False, **kwargs):
-        """Get income categories.
+        """Request income categories.
 
-        :param income_codes:    List of 3-letter ID codes. If None, queries all
-                                (~10).
+        :param income_codes:
+            List of 3-letter ID codes. If None, queries all (~10).
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
 
-        :returns:   Dictionary of income levels using ID codes as keys.
+        :returns:
+            Dictionary of income levels using ID codes as keys.
 
         """
         func_params = {
@@ -283,18 +318,24 @@ class IndicatorAPI(object):
 
     def get_lending_types(self, lending_codes=None, search=None,
             search_full=False, **kwargs):
-        """Get lending type categories.
+        """Request lending type categories.
 
-        :param lending_codes:   List of lending codes. If None, queries all (4).
+        :param lending_codes:
+            List of lending codes. If None, queries all (4).
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
 
-        :returns:   Dictionary of lending types using ID codes as keys.
+
+        :returns:
+            Dictionary of lending types using ID codes as keys.
 
         """
         func_params = {
@@ -308,19 +349,23 @@ class IndicatorAPI(object):
 
     def get_regions(self, region_codes=None, search=None, search_full=False,
             **kwargs):
-        """Get wider region names and codes.
+        """Request region names and codes.
 
-        :param region_codes:    List of 3-letter codes. If None, queries all
-                                (~26).
+        :param region_codes:
+            List of 3-letter codes. If None, queries all (~26).
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
 
-        :returns:   Dictionary of regions, using ID codes as keys.
+        :returns:
+            Dictionary of regions, using ID codes as keys.
 
         """
         func_params = {
@@ -334,20 +379,26 @@ class IndicatorAPI(object):
 
     def get_topics(self, topic_codes=None, search=None,
             search_full=False, **kwargs):
-        """Get Indicators topics. All indicators are mapped to a topic, eg.
-        Health, Private Sector. You can use the topic id as a filtering arg to
-        ``get_indicators``.
+        """Request API topics.
 
-        :param topic_codes: List of topic IDs. If None, queries all (~20).
+        All indicators are mapped to a topic, eg. Health, Private Sector. You
+        can use the topic ID as a kwarg to ``get_indicators()``.
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param topic_codes:
+            List of topic IDs. If None, queries all (~20).
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :returns:   Dictionary of topics usings ID numbers as keys.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
+
+        :returns:
+            Dictionary of topics usings ID numbers as keys.
 
         """
         func_params = {
@@ -361,21 +412,23 @@ class IndicatorAPI(object):
 
     def get_sources(self, source_codes=None, search=None,
             search_full=False, **kwargs):
-        """Get source info for the Indicators data .You can use the source id
-        as a filtering arg to ``get_indicators``. (At time of writing, the API
-        only returns source names, not the descriptions and URLs visible in the
-        official documentation).
+        """Request API source info.
 
-        :param source_codes:    List of source IDs. If None, queries all (~27).
+        :param source_codes:
+            List of source IDs. If None, queries all (~27).
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param kwargs:      These map directly to the API query args:
-                            *language*.
+        :param kwargs:
+            The following map directly to the API query args:
+            ``language``
 
-        :returns:   Dictionary of sources using ID numbers as keys.
+        :returns:
+            Dictionary of sources using ID numbers as keys.
 
         """
         func_params = {
@@ -390,12 +443,14 @@ class IndicatorAPI(object):
     def print_codes(self, results, search=None, search_full=None):
         """Print formatted list of API IDs and their corresponding values.
 
-        :param results:     A dictionary that was returned by one of the ``get``
-                            functions.
+        :param search:
+            Regexp string to filter out non-matching results.
+            By default, this searches the main name of the entity. If
+            ``search_full`` is assigned True, it will search all fields for the
+            entity.
 
-        :param search:  Regexp string to filter results. By default, this only
-                        searches the main name of the entity. If *search_full*
-                        is True, all fields are searched.
+        :param results:
+            A dictionary that was returned by one of the ``get`` functions.
 
         """
         # Natural sort the result keys for nicer print order
@@ -424,19 +479,23 @@ class IndicatorAPI(object):
             print u"{0:30} {1}".format(k, main_value)
 
     def search_results(self, regexp, results, key=None):
-        """ For a given dict of ``get_`` results, filter out all keys that do
+        """For a given dict of ``get_`` results, filter out all keys that do
         not match the given regexp in either the key or the value. The search
-        is *not case sensitive*.
+        is not case sensitive.
 
-        :param regexp:      The regexp string, passed to ``re.search``.
+        :param regexp:
+            The regexp string, passed to ``re.search``.
 
-        :param results:     A dictionary of ``get_`` results.
+        :param results:
+            A dictionary of ``get_foo()`` results.
 
-        :param key:         A second-level KEY in your dict, eg.
-                            {foo: {KEY: val}}. If given, will only search
-                            the value corresponding to the key.
+        :param key:
+            A second-level KEY in your dict, eg. ``{foo: {KEY: val}}``.
+            If given, will only search the value corresponding to the key.
 
-        :returns:       The input dictionary, with non-matching keys removed.
+        :returns:
+            The input dictionary, with non-matching keys removed.
+
         """
         compiled_re = re.compile(regexp, flags=re.IGNORECASE)
         search_matches = {}
@@ -455,11 +514,19 @@ class IndicatorAPI(object):
     # ========================================================================
     # PRIVATE METHODS
     # ========================================================================
-    def _generate_indicators_url(self, rest_url, dataset_params=False, **kwargs):
-        """Adds API root and query string options to an otherwise complete
-        endpoint, eg.
+    def _generate_indicators_url(
+        self,
+        rest_url,
+        dataset_params=False,
+        **kwargs):
+        """Add API root and query string options to an otherwise complete
+        endpoint.
 
-        "incomeLevel?", or "lendingType?key=val".
+        :param rest_url:
+            eg. "incomeLevel?", or "lendingType?key=val".
+
+        :param dataset_params:
+            Add query values that are only relevant to the get_dataset() call.
 
         """
         kwargs = dict([(k.lower(), v) for k, v in kwargs.items()])
@@ -507,15 +574,15 @@ class IndicatorAPI(object):
         return new_url
 
     def _get_api_response_as_json(self, url):
-        """Returns JSON content from Indicators URL.
+        """Return JSON content from Indicators URL.
 
-        Concatenates the returned
-        list if request requires multiple-page responses.
+        Concatenates the returned list if request requires multiple-page
+        responses.
 
         """
         web_page = self.fetch(url)
         json_resp = json.loads(web_page)
-        self._raise_if_response_contains_error(json_resp, url)
+        self._raise_if_bad_response(json_resp, url)
         header = json_resp[0]
         content = json_resp[1]
         current_page = header["page"]
@@ -527,23 +594,24 @@ class IndicatorAPI(object):
     def _get_indicator_data(self, func_params, api_ids, search=None,
             search_full=False, **kwargs):
         """
-        :param func_params:     Dict of variables to build this function...
-        :rest_url:              The base endpoint url, eg. topic, region.
-        :response_key:          The value of this key in the JSON response is
-                                used as the top-level identifying key in the
-                                result dictionary.
-        :search_key:            If search_full==False, this will be the only
-                                key searched - the main name of the entity.
+        :param func_params:
+            Dict of variables to build this function:
+            rest_url - the REST part of the url, eg. topic, region.
+            response_key - the val of this key in the JSON response is used as
+                the top-level, identifying key in the returned dictionary.
+            search_key - if search_full is False, this will be the only key
+                searched - the main name of the entity.
 
+        :param api_ids:
+            API codes for the indicator, eg. if calling a topic might be [1, 2,
+            5].
 
-        :param api_ids:         API codes for the indicator, eg. if calling a
-                                topic might be [1, 2, 5].
+        :param rest_url:
+            The access point, eg. 'indicators', 'lendingType'.
 
-        :param rest_url:        The access point, eg. 'indicators',
-                                'lendingType'.
-
-        :returns:       Dictionary with keys that are the given response_key
-                        for the API response.
+        :returns:
+            Dictionary with keys that are the given response_key for the API
+            response.
         """
         # Make the URL and call the JSON data.
         if api_ids:
@@ -573,6 +641,6 @@ class IndicatorAPI(object):
                     func_params["search_key"])
         return filtered_data
 
-    def _raise_if_response_contains_error(self, json_resp, url):
+    def _raise_if_bad_response(self, json_resp, url):
         if json_resp[0].get("pages") == 0 or json_resp[0].get("message"):
             raise ValueError(utils.EXC_MSG % (url, json_resp))
