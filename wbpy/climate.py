@@ -7,14 +7,16 @@ import itertools
 
 import pycountry
 
-import utils
-import indicators
+from . import utils
 
 
 class ClimateDataset(object):
-    """ A single World Bank Climate Data API dataset. Includes the JSON
-    response, various metadata, and methods to convert the data into useful
-    objects.
+
+    """A single World Bank Climate Data API dataset.
+
+    Includes the JSON response, various metadata, and methods to convert
+    the data into useful objects.
+
     """
 
     def __init__(self, api_calls, data_type, data_interval, call_date):
@@ -34,9 +36,10 @@ class ClimateDataset(object):
             try:
                 code = utils.convert_country_code(region.upper(), "alpha2")
                 val = pycountry.countries.get(alpha2=code).name
-            except KeyError: # If not country code, assume it's a basin
+            except KeyError:  # If not country code, assume it's a basin
                 code = region
-                val = "http://data.worldbank.org/sites/default/files/climate_data_api_basins.pdf"
+                val = "http://data.worldbank.org/sites/default/files"
+                "/climate_data_api_basins.pdf"
             resp["region"] = (code, val)
 
     def __repr__(self):
@@ -75,7 +78,7 @@ class InstrumentalDataset(ClimateDataset):
 
         if self.interval == "month":
             for call in self.api_calls:
-                sorted_months = sorted(call["resp"], 
+                sorted_months = sorted(call["resp"],
                     key=lambda row: float(row["month"]))
                 vals = [float(row["data"]) for row in sorted_months]
 
@@ -88,7 +91,8 @@ class InstrumentalDataset(ClimateDataset):
                 results[region_code] = this_region
                 for row in call["resp"]:
                     if use_datetime:
-                        key = utils.worldbank_date_to_datetime(str(row["year"]))
+                        key = utils.worldbank_date_to_datetime(
+                            str(row["year"]))
                     else:
                         key = str(row["year"])
                     this_region[key] = float(row["data"])
@@ -121,10 +125,8 @@ class ModelledDataset(ClimateDataset):
 
         if self.data_type in ["pr", "tas"]:
             self.control_period = ("1961", "1999")
-            clim_dates = ClimateAPI._valid_modelled_dates
         else:
             self.control_period = ("1961", "2000")
-            clim_dates = ClimateAPI._valid_stat_dates
 
     def dates(self, use_datetime=False):
         dates = set()
@@ -166,7 +168,7 @@ class ModelledDataset(ClimateDataset):
                 region_dict = results[gcm_key][region_code]
 
                 year = str(row["toYear"])
-                if use_datetime: 
+                if use_datetime:
                     year = utils.worldbank_date_to_datetime(year)
 
                 if year not in region_dict:
@@ -176,9 +178,9 @@ class ModelledDataset(ClimateDataset):
                         # Assume they are monthly values
                         val = row["monthVals"]
                     region_dict[year] = val
-                        
+
         return results
-                
+
 
 class ClimateAPI(object):
 
@@ -204,7 +206,7 @@ class ClimateAPI(object):
         ensemble_90="90th percentile values of all models together",
         )
 
-    _valid_modelled_dates = [        
+    _valid_modelled_dates = [
         (1920, 1939),
         (1940, 1959),
         (1960, 1979),
@@ -215,15 +217,15 @@ class ClimateAPI(object):
         (2080, 2099),
         ]
 
-    _valid_stat_dates = [        
+    _valid_stat_dates = [
         (1961, 2000),
         (2046, 2065),
         (2081, 2100),
         ]
 
     _instrumental_types = dict(
-        pr="Precipitation (rainfall and assumed water equivalent), in "\
-            "millimeters",
+        pr="Precipitation (rainfall and assumed water equivalent), in "
+        "millimeters",
         tas="Temperature, in degrees Celsius",
         )
 
@@ -232,29 +234,29 @@ class ClimateAPI(object):
     _modelled_types = dict(
         tmin_means="Average daily minimum temperature, Celsius",
         tmax_means="Average daily maximum temperature, Celsius",
-        tmax_days90th="Number of days with max temperature above the "\
-            "control period's 90th percentile (hot days)",
-        tmin_days90th="Number of days with min temperature above the "\
-            "control period's 90th percentile (warm nights)",
-        tmax_days10th="Number of days with max temperature below the "\
-            "control period's 10th percentile (cool days)",
-        tmin_days10th="Number of days with min temperature below the "\
-            "control period's 10th percentile (cold nights)",
-        tmin_days0="Number of days with min temperature below "\
-            "0 degrees Celsius",
+        tmax_days90th="Number of days with max temperature above the "
+        "control period's 90th percentile (hot days)",
+        tmin_days90th="Number of days with min temperature above the "
+        "control period's 90th percentile (warm nights)",
+        tmax_days10th="Number of days with max temperature below the "
+        "control period's 10th percentile (cool days)",
+        tmin_days10th="Number of days with min temperature below the "
+        "control period's 10th percentile (cold nights)",
+        tmin_days0="Number of days with min temperature below "
+        "0 degrees Celsius",
         ppt_days="Number of days with precipitation > 0.2mm",
         ppt_days2="Number of days with precipitation > 2mm",
         ppt_days10="Number of days with precipitation > 10mm",
-        ppt_days90th="Number of days with precipitation > the control "\
-            "period's 90th percentile",
-        ppt_dryspell="Average number of days between precipitation "\
-            "events",
+        ppt_days90th="Number of days with precipitation > the control "
+        "period's 90th percentile",
+        ppt_dryspell="Average number of days between precipitation "
+        "events",
         ppt_means="Average daily precipitation",
         pr=_instrumental_types["pr"],
         tas=_instrumental_types["tas"],
         )
 
-    _modelled_intervals= dict(
+    _modelled_intervals = dict(
         mavg="Monthly average",
         annualavg="Annual average",
         manom="Average monthly change (anomaly).",
@@ -284,16 +286,16 @@ class ClimateAPI(object):
         modelled_types=_modelled_types,
         modelled_intervals=_modelled_intervals,
         )
-    
+
     BASE_URL = "http://climatedataapi.worldbank.org/climateweb/rest/"
 
-
     def __init__(self, fetch=None):
-        """ A connection to the World Bank Climate API. 
+        """A connection to the World Bank Climate API.
 
-        You can override the default tempfile cache by passing a ``fetch`` 
-        function, which fetches a url and returns a string. ``self.fetch`` can
-        also be set after instantiation.
+        You can override the default tempfile cache by passing a
+        ``fetch`` function, which fetches a url and returns a string.
+        ``self.fetch`` can also be set after instantiation.
+
         """
         self.fetch = fetch if fetch else utils.fetch
 
@@ -319,7 +321,7 @@ class ClimateAPI(object):
                 loc = utils.convert_country_code(loc, "alpha3")
                 loc_type = "country"
 
-            data_url = "v1/{0}/cru/{1}/{2}/{3}".format(loc_type, data_type, 
+            data_url = "v1/{0}/cru/{1}/{2}/{3}".format(loc_type, data_type,
                 interval, str(loc))
             full_url = "".join([self.BASE_URL, data_url])
             urls.append((loc, full_url))
@@ -334,9 +336,8 @@ class ClimateAPI(object):
                 ))
 
         call_date = datetime.datetime.now().date()
-        return InstrumentalDataset(api_calls, data_interval=interval, 
+        return InstrumentalDataset(api_calls, data_interval=interval,
             data_type=data_type, call_date=call_date)
-
 
     def get_modelled(self, data_type, interval, locations):
         data_type = self._clean_api_code(data_type)
@@ -362,7 +363,7 @@ class ClimateAPI(object):
         api_calls = []
         for loc in locations:
             try:
-                int(loc) # basin ids are ints
+                int(loc)  # basin ids are ints
                 loc_type = "basin"
             except ValueError:
                 loc = utils.convert_country_code(loc, "alpha3")
@@ -382,5 +383,5 @@ class ClimateAPI(object):
                     ))
 
         call_date = datetime.datetime.now().date()
-        return ModelledDataset(api_calls, data_interval=interval, 
+        return ModelledDataset(api_calls, data_interval=interval,
             data_type=data_type, call_date=call_date)

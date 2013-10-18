@@ -7,8 +7,9 @@ import logging
 import datetime
 import hashlib
 import json
+import sys
 
-import pycountry # For ISO 1366 code conversions
+import pycountry  # For ISO 1366 code conversions
 
 logger = logging.getLogger(__name__)
 
@@ -20,14 +21,14 @@ EXC_MSG = "The URL %s returned a bad response: %s"
 #
 # The file contains the results of IndicatorAPI.get_countries(), with all the
 # ISO countries excluded.
-path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 
+path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
     "non_ISO_region_codes.json")
 NON_STANDARD_REGIONS = json.loads(open(path).read())
 
 
 def fetch(url, check_cache=True, cache_response=True):
-    """ Cache function, take a url and return the response. """
-    # Use system tempfile for cache path. 
+    """Cache function, take a url and return the response."""
+    # Use system tempfile for cache path.
     cache_dir = os.path.join(tempfile.gettempdir(), "wbpy")
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -42,29 +43,45 @@ def fetch(url, check_cache=True, cache_response=True):
     # If the cache file is < one day old, return cache, else get new response.
     if check_cache:
         if os.path.exists(cache_path):
-            seconds_in_day = 86400
-            if int(time.time()) - os.path.getmtime(cache_path) < seconds_in_day:
-                logger.debug("Retrieving web response from cache.")
-                return open(cache_path, "rb").read().decode("utf-8")
+            logger.debug("URL found in cache...")
+            secs_in_day = 86400
+            if int(time.time()) - os.path.getmtime(cache_path) < secs_in_day:
+                logger.debug("Retrieving response from cache.")
+                response = open(cache_path, "rb").read().decode("utf-8")
+                print response
+                return response
+            else:
+                logger.debug("Cache file has expired, removing...")
+                os.remove(cache_path)
+        else:
+            logger.debug("URL not found in cache....")
 
-    logger.debug("URL not found in cache. Getting web response...")
+    logger.debug("Getting web response...")
     response = urllib2.urlopen(url).read()
+
+    # py3 returns bytestring
+    if sys.version_info >= (3,):
+        response = response.decode("utf-8")
+
+    logger.debug("Response received.")
     if cache_response:
+        logger.debug("Caching response... ")
         _cache_response(response, url, cache_path)
-    return response.decode("utf-8")
+    return response
+
 
 def _cache_response(response, url, cache_path):
     fd, tempname = tempfile.mkstemp()
-    fp = os.fdopen(fd, "w")
-    fp.write(response.decode("utf-8"))
-    fp.close()
+    f = os.fdopen(fd, "w")
+    f.write(response)
+    f.close()
     os.rename(tempname, cache_path)
     logger.debug("New url saved to cache: %s" % url)
 
 
 def convert_country_code(code, return_alpha):
     """ Convert an ISO 1366 alpha-2 or alpha-3 code into either alpha-2 or
-    alpha-3. 
+    alpha-3.
 
     :param code:
         The code to convert. If it isn't a valid ISO code, it gets returned as
@@ -81,7 +98,7 @@ def convert_country_code(code, return_alpha):
         elif len(code) == 3:
             country = pycountry.countries.get(alpha3=code)
         else:
-            raise ValueError, "`code` is not a valid alpha-2 or alpha-3 code"
+            raise ValueError("`code` is not a valid alpha-2 or alpha-3 code")
         return getattr(country, return_alpha)
 
     except (KeyError, ValueError):
@@ -97,12 +114,13 @@ def convert_country_code(code, return_alpha):
         # No match found
         return code
 
+
 def worldbank_date_to_datetime(date):
-    """ Convert given world bank date string to datetime.date object. """
+    """Convert given world bank date string to datetime.date object."""
     if "Q" in date:
         year, quarter = date.split("Q")
         return datetime.date(int(year), (int(quarter) * 3) - 2, 1)
-    
+
     if "M" in date:
         year, month = date.split("M")
         return datetime.date(int(year), int(month), 1)
