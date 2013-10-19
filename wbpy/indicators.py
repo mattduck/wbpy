@@ -39,7 +39,7 @@ class IndicatorDataset(object):
         # For some use cases, it's nice to have direct access to all the
         # `get_indicator()` metadata (eg. the sources, full description).
         # It won't always be wanted, so it's requested lazily.
-        self._metadata_response = None
+        self._indicator_response = None
 
     def __repr__(self):
         s = "<%s.%s(%r, %r) with id: %r>"
@@ -73,35 +73,30 @@ class IndicatorDataset(object):
 
         return sorted(dates)
 
-    def _get_metadata_response(self):
+    @property
+    def _indicator(self):
         """Lazy loading of the dataset's indicator metadata from the API."""
-        api = IndicatorAPI()
-        indicators = api.get_indicators([self.indicator_code])
-        self._metadata_response = indicators[self.indicator_code]
+        if not self._indicator_response:
+            api = IndicatorAPI()
+            indicators = api.get_indicators([self.indicator_code])
+            self._indicator_response = indicators[self.indicator_code]
+        return self._indicator_response
 
     @property
     def indicator_source(self):
-        if not self._metadata_response:
-            self._get_metadata_response()
-        return self._metadata_response["source"]
+        return self._indicator["source"]
 
     @property
     def indicator_source_note(self):
-        if not self._metadata_response:
-            self._get_metadata_response()
-        return self._metadata_response["sourceNote"]
+        return self._indicator["sourceNote"]
 
     @property
     def indicator_source_org(self):
-        if not self._metadata_response:
-            self._get_metadata_response()
-        return self._metadata_response["sourceOrganization"]
+        return self._indicator["sourceOrganization"]
 
     @property
     def indicator_topics(self):
-        if not self._metadata_response:
-            self._get_metadata_response()
-        return self._metadata_response["topics"]
+        return self._indicator["topics"]
 
     def as_dict(self, use_datetime=False):
         """Return dictionary of the dataset's data.
