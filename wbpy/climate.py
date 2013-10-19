@@ -302,11 +302,6 @@ class ClimateAPI(object):
 
     # Convenience codes
     _shorthand_codes = dict(
-        ppt="pr",
-        precip="pr",
-        precipitation="pr",
-        temp="tas",
-        temperature="tas",
         aanom="annualanom",
         aavg="annualavg",
         )

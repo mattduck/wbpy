@@ -247,12 +247,6 @@ class TestInstumentalFn(TestClimateAPI):
         dataset = self.api.get_instrumental("tas", "month", locs)
         self.assertEqual(dataset.as_dict()["GB"][0], 3.5558505)
 
-    def test_precip_type_shorthand(self):
-        # Assuming if one shorthand type code works, they all work.
-        locs = ["US"]
-        dataset = self.api.get_instrumental("precip", "year", locs)
-        self.assertTrue(dataset.api_call_date)
-
     def test_basin_location(self):
         locs = [302, "301"]
         dataset = self.api.get_instrumental("pr", "decade", locs)
@@ -274,7 +268,7 @@ class TestModelledFn(TestClimateAPI):
 
     def test_temp_type(self):
         locs = ["AF"]
-        dataset = self.api.get_modelled("temp", "mavg", locs)
+        dataset = self.api.get_modelled("tas", "mavg", locs)
         self.assertIn("tas", dataset.data_type)
    
     @data("ppt_days", "tmin_means", "ppt_days90th") 
@@ -285,17 +279,17 @@ class TestModelledFn(TestClimateAPI):
 
     def test_aavg_interval(self):
         locs = ["AF"]
-        dataset = self.api.get_modelled("temp", "aavg", locs)
+        dataset = self.api.get_modelled("tas", "aavg", locs)
         self.assertTrue(dataset.as_dict())
 
     def test_manom_interval(self):
         locs = [302]
-        dataset = self.api.get_modelled("temp", "manom", locs)
+        dataset = self.api.get_modelled("tas", "manom", locs)
         self.assertTrue(dataset.as_dict())
 
     def test_aanom_interval(self):
         locs = ["AF"]
-        dataset = self.api.get_modelled("temp", "aanom", locs)
+        dataset = self.api.get_modelled("tas", "aanom", locs)
         self.assertTrue(dataset.as_dict())
 
     def test_value(self):
@@ -323,12 +317,12 @@ class TestModelledFn(TestClimateAPI):
 class TestLocationCodes(TestClimateAPI):
     def test_alpha2_codes_work_as_location_arg(self):
         locs = ["GB"]
-        dataset = self.api.get_modelled("temp", "aanom", locs)
+        dataset = self.api.get_modelled("tas", "aanom", locs)
         self.assertTrue(dataset.as_dict())
 
     def test_alpha3_codes_work_as_location_arg(self):
         locs = ["GBR"]
-        dataset = self.api.get_modelled("temp", "aanom", locs)
+        dataset = self.api.get_modelled("tas", "aanom", locs)
         self.assertTrue(dataset.as_dict())
 
 @ddt
