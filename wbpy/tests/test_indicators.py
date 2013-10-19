@@ -344,7 +344,12 @@ class TestPrintCodes(TestIndicatorAPI):
 
     def test_search_param_doesnt_raise(self):
         results = self.api.get_countries()
-        self.api.print_codes(results, search="United", search_full=True)
+        self.api.print_codes(results, search="United")
+        assert True
+
+    def test_search_param_can_handle_search_key_arg(self):
+        results = self.api.get_countries()
+        self.api.print_codes(results, search="United", search_key=["name"])
         assert True
 
 

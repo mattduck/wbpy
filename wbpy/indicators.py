@@ -435,14 +435,17 @@ class IndicatorAPI(object):
             source_codes, search=search, search_full=search_full,
             **kwargs)
 
-    def print_codes(self, results, search=None, search_full=None):
+    def print_codes(self, results, search=None, search_key=None):
         """Print formatted list of API IDs and their corresponding values.
 
         :param search:
             Regexp string to filter out non-matching results.
-            By default, this searches the main name of the entity. If
-            ``search_full`` is assigned True, it will search all fields for the
-            entity.
+            By default, this searches the main name of the entity.
+            
+        :param search_key:
+            A second-level KEY in your dict, eg. ``{foo: {KEY: val}}``.
+            If given, will only search the value corresponding to the key.
+            Only used if ``search`` is given.
 
         :param results:
             A dictionary that was returned by one of the ``get`` functions.
@@ -459,11 +462,10 @@ class IndicatorAPI(object):
         if search:
             # Either search everything, or just the main "name" value of the
             # entity.
-            if search_full:
+            if search_key:
                 results = self.search_results(search, results)
             else:
-                results = self.search_results(search, results,
-                    func_params["search_key"])
+                results = self.search_results(search, results, search_key)
 
         for k, v in sorted(results.items(), key=natural_keys):
             # Value will either be a dict or string
