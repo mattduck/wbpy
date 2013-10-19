@@ -48,7 +48,6 @@ def fetch(url, check_cache=True, cache_response=True):
             if int(time.time()) - os.path.getmtime(cache_path) < secs_in_day:
                 logger.debug("Retrieving response from cache.")
                 response = open(cache_path, "rb").read().decode("utf-8")
-                print response
                 return response
             else:
                 logger.debug("Cache file has expired, removing...")
