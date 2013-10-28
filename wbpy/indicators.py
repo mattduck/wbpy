@@ -13,13 +13,6 @@ from . import utils
 
 class IndicatorDataset(object):
 
-    """A single World Bank Indicator dataset.
-
-    Includes the raw JSON API response, various metadata, and methods to
-    convert the data into useful objects.
-
-    """
-
     def __init__(self, json_resp, url=None, date_of_call=None):
         self.api_url = url
         self.api_call_date = date_of_call
@@ -129,7 +122,11 @@ class IndicatorDataset(object):
 
 class IndicatorAPI(object):
 
-    """Request data from the World Bank Indicators API."""
+    """Request data from the World Bank Indicators API. 
+    
+    You can override the default tempfile cache by passing a function
+    ``fetch``, which requests a URL and returns the response as a string. 
+    """
 
     BASE_URL = "http://api.worldbank.org/"
 
@@ -137,13 +134,8 @@ class IndicatorAPI(object):
     NON_STANDARD_REGIONS = utils.NON_STANDARD_REGIONS
 
     def __init__(self, fetch=None):
-        """You can override the default tempfile cache by passing a function,
-        ``fetch``, which requests a URL and returns a string."""
         self.fetch = fetch if fetch else utils.fetch
 
-    # ========================================================================
-    # PUBLIC METHODS
-    # ========================================================================
     def get_dataset(self, indicator, country_codes=None,
             **kwargs):
         """Request a dataset from the API.
@@ -508,9 +500,7 @@ class IndicatorAPI(object):
                     search_matches[k] = v
         return search_matches
 
-    # ========================================================================
-    # PRIVATE METHODS
-    # ========================================================================
+
     def _generate_indicators_url(
         self,
         rest_url,

@@ -12,13 +12,6 @@ from . import utils
 
 class ClimateDataset(object):
 
-    """A single World Bank Climate Data API dataset.
-
-    Includes the JSON response, various metadata, and methods to convert
-    the data into useful objects.
-
-    """
-
     def __init__(self, api_calls, data_type, data_interval, call_date):
         """
         :param api_calls:
@@ -219,7 +212,11 @@ class ModelledDataset(ClimateDataset):
 
 class ClimateAPI(object):
 
-    """Access the World Bank Climate API."""
+    """Request data from the World Bank Climate API. 
+    
+    You can override the default tempfile cache by passing a function
+    ``fetch``, which requests a URL and returns the response as a string. 
+    """
 
     _gcm = dict(
         bccr_bcm2_0="BCM 2.0",
@@ -322,12 +319,6 @@ class ClimateAPI(object):
     BASE_URL = "http://climatedataapi.worldbank.org/climateweb/rest/"
 
     def __init__(self, fetch=None):
-        """You can override the default tempfile cache by passing a ``fetch``
-        function, which fetches a url and returns a string.
-
-        ``self.fetch`` can also be set after instantiation.
-
-        """
         self.fetch = fetch if fetch else utils.fetch
 
     @staticmethod
