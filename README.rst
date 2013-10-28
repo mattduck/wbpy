@@ -1,4 +1,6 @@
 
+``(This file was built from an IPython Notebook. Download README.ipynb on Github to poke around.)``
+
 wbpy
 ====
 
@@ -16,23 +18,27 @@ population, poverty, technology, etc.
 The Climate API lets you access modelled and historical data for
 temperature and precipitation.
 
-``This file was built from an IPython Notebook. See README.ipynb on Github to poke around.``
-
 Why use wbpy?
 -------------
 
 
--  Dataset models let you access the data and associated metadata in
-   different formats.
--  If you don't like the data objects, you can still access the raw JSON
-   responses.
--  Single method calls to do the equivalent of multiple API requests.
--  Works with both ISO 1366 alpha-2 and alpha-3 country codes (the APIs
-   mostly just supports alpha-3).
+-  Dataset models let you access processed data and associated metadata
+   in different formats.
+-  If you don't want processed data objects, you can still access the
+   raw JSON response.
+-  Single method calls to do the equivalent of multiple API requests,
+   eg. wbpy handles the specific date pairs which would otherwise be
+   required for the Climate API.
+-  Works with both ISO 1366 alpha-2 and alpha-3 country codes (the web
+   APIs mostly just support alpha-3).
 
+Elsewhere, there is also
+`wbdata <https://github.com/OliverSherouse/wbdata>`_, a wrapper for the
+Indicators API which supports Pandas structures and has some
+command-line functionality.
 
-Install
--------
+Installation
+------------
 
 
 ``pip install wbpy``, or download the source code and
@@ -65,7 +71,7 @@ Here's a small case where we already know what API codes to use:
 
 .. parsed-literal::
 
-    <wbpy.indicators.IndicatorDataset('SP.POP.TOTL', 'Population, total') with id: 189390508>
+    <wbpy.indicators.IndicatorDataset(u'SP.POP.TOTL', u'Population, total') with id: 203402188>
 
 
 
@@ -81,9 +87,9 @@ of the data:
 
 .. parsed-literal::
 
-    {'FR': {'2010': 65031235.0, '2011': 65371613.0, '2012': 65696689.0},
-     'GB': {'2010': 62271177.0, '2011': 62752472.0, '2012': 63227526.0},
-     'JP': {'2010': 127450459.0, '2011': 127817277.0, '2012': 127561489.0}}
+    {u'FR': {u'2010': 65031235.0, u'2011': 65371613.0, u'2012': 65696689.0},
+     u'GB': {u'2010': 62271177.0, u'2011': 62752472.0, u'2012': 63227526.0},
+     u'JP': {u'2010': 127450459.0, u'2011': 127817277.0, u'2012': 127561489.0}}
 
 
 
@@ -109,7 +115,7 @@ Some examples of the metadata available:
 
 .. parsed-literal::
 
-    'Population, total'
+    u'Population, total'
 
 
 
@@ -121,7 +127,8 @@ Some examples of the metadata available:
 
 .. parsed-literal::
 
-    [{'id': '8', 'value': 'Health '}, {'id': '19', 'value': 'Climate Change'}]
+    [{u'id': u'8', u'value': u'Health '},
+     {u'id': u'19', u'value': u'Climate Change'}]
 
 
 
@@ -133,7 +140,7 @@ Some examples of the metadata available:
 
 .. parsed-literal::
 
-    {'FR': 'France', 'GB': 'United Kingdom', 'JP': 'Japan'}
+    {u'FR': u'France', u'GB': u'United Kingdom', u'JP': u'Japan'}
 
 
 
@@ -148,52 +155,52 @@ API response:
 
 .. parsed-literal::
 
-    [{'page': 1, 'pages': 1, 'per_page': '10000', 'total': 9},
-     [{'country': {'id': 'FR', 'value': 'France'},
-       'date': '2012',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '65696689'},
-      {'country': {'id': 'FR', 'value': 'France'},
-       'date': '2011',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '65371613'},
-      {'country': {'id': 'FR', 'value': 'France'},
-       'date': '2010',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '65031235'},
-      {'country': {'id': 'GB', 'value': 'United Kingdom'},
-       'date': '2012',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '63227526'},
-      {'country': {'id': 'GB', 'value': 'United Kingdom'},
-       'date': '2011',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '62752472'},
-      {'country': {'id': 'GB', 'value': 'United Kingdom'},
-       'date': '2010',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '62271177'},
-      {'country': {'id': 'JP', 'value': 'Japan'},
-       'date': '2012',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '127561489'},
-      {'country': {'id': 'JP', 'value': 'Japan'},
-       'date': '2011',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '127817277'},
-      {'country': {'id': 'JP', 'value': 'Japan'},
-       'date': '2010',
-       'decimal': '0',
-       'indicator': {'id': 'SP.POP.TOTL', 'value': 'Population, total'},
-       'value': '127450459'}]]
+    [{u'page': 1, u'pages': 1, u'per_page': u'10000', u'total': 9},
+     [{u'country': {u'id': u'FR', u'value': u'France'},
+       u'date': u'2012',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'65696689'},
+      {u'country': {u'id': u'FR', u'value': u'France'},
+       u'date': u'2011',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'65371613'},
+      {u'country': {u'id': u'FR', u'value': u'France'},
+       u'date': u'2010',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'65031235'},
+      {u'country': {u'id': u'GB', u'value': u'United Kingdom'},
+       u'date': u'2012',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'63227526'},
+      {u'country': {u'id': u'GB', u'value': u'United Kingdom'},
+       u'date': u'2011',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'62752472'},
+      {u'country': {u'id': u'GB', u'value': u'United Kingdom'},
+       u'date': u'2010',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'62271177'},
+      {u'country': {u'id': u'JP', u'value': u'Japan'},
+       u'date': u'2012',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'127561489'},
+      {u'country': {u'id': u'JP', u'value': u'Japan'},
+       u'date': u'2011',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'127817277'},
+      {u'country': {u'id': u'JP', u'value': u'Japan'},
+       u'date': u'2010',
+       u'decimal': u'0',
+       u'indicator': {u'id': u'SP.POP.TOTL', u'value': u'Population, total'},
+       u'value': u'127450459'}]]
 
 
 
@@ -258,12 +265,12 @@ Each indicator has a variety of metadata:
 
 .. parsed-literal::
 
-    ('SN.ITK.DEFC.ZS',
-     {'name': 'Prevalence of undernourishment (% of population)',
-      'source': {'id': '2', 'value': 'World Development Indicators'},
-      'sourceNote': 'Population below minimum level of dietary energy consumption (also referred to as prevalence of undernourishment) shows the percentage of the population whose food intake is insufficient to meet dietary energy requirements continuously. Data showing as 2.5 signifies a prevalence of undernourishment below 2.5%.',
-      'sourceOrganization': 'Food and Agriculture Organization, The State of Food Insecurity in the World (http://www.fao.org/publications/sofi/food-security-indicators/en/).',
-      'topics': [{'id': '8', 'value': 'Health '}]})
+    (u'SN.ITK.DEFC.ZS',
+     {u'name': u'Prevalence of undernourishment (% of population)',
+      u'source': {u'id': u'2', u'value': u'World Development Indicators'},
+      u'sourceNote': u'Population below minimum level of dietary energy consumption (also referred to as prevalence of undernourishment) shows the percentage of the population whose food intake is insufficient to meet dietary energy requirements continuously. Data showing as 2.5 signifies a prevalence of undernourishment below 2.5%.',
+      u'sourceOrganization': u'Food and Agriculture Organization, The State of Food Insecurity in the World (http://www.fao.org/publications/sofi/food-security-indicators/en/).',
+      u'topics': [{u'id': u'8', u'value': u'Health '}]})
 
 
 That data might be useful, but it's not very friendly if you just want
@@ -340,14 +347,16 @@ method, which you can use directly:
 
 .. parsed-literal::
 
-    {'20': {'description': '', 'name': 'Public Sector Debt', 'url': ''},
-     '22': {'description': '',
-            'name': 'Quarterly External Debt Statistics (QEDS) - Special Data Dissemination Standard (SDDS)',
-            'url': ''},
-     '23': {'description': '',
-            'name': 'Quarterly External Debt Statistics (QEDS) - General Data Dissemination System (GDDS)',
-            'url': ''},
-     '6': {'description': '', 'name': 'International Debt Statistics', 'url': ''}}
+    {u'20': {u'description': u'', u'name': u'Public Sector Debt', u'url': u''},
+     u'22': {u'description': u'',
+             u'name': u'Quarterly External Debt Statistics (QEDS) - Special Data Dissemination Standard (SDDS)',
+             u'url': u''},
+     u'23': {u'description': u'',
+             u'name': u'Quarterly External Debt Statistics (QEDS) - General Data Dissemination System (GDDS)',
+             u'url': u''},
+     u'6': {u'description': u'',
+            u'name': u'International Debt Statistics',
+            u'url': u''}}
 
 
 By default, the ``search`` parameter only searches the title of an
@@ -539,7 +548,7 @@ The available arguments and their definitions are accessible via the
 
 .. parsed-literal::
 
-    <wbpy.climate.InstrumentalDataset({'tas': 'Temperature, in degrees Celsius'}, 'decade') with id: 188879212>
+    <wbpy.climate.InstrumentalDataset({'tas': 'Temperature, in degrees Celsius'}, 'decade') with id: 200286060>
 
 
 
@@ -647,7 +656,7 @@ are various possible data types:
 
 .. parsed-literal::
 
-    <wbpy.climate.ModelledDataset({'pr': 'Precipitation (rainfall and assumed water equivalent), in millimeters'}, {'annualavg': 'Annual average'}) with id: 169564652>
+    <wbpy.climate.ModelledDataset({'pr': 'Precipitation (rainfall and assumed water equivalent), in millimeters'}, {'annualavg': 'Annual average'}) with id: 200267916>
 
 
 
@@ -807,7 +816,7 @@ scenarios:
                                '2099': 907.0139017841842}}}
 
 
-Again, various metadata is available:
+Again, various metadata is available, for example:
 
 .. code:: python
 

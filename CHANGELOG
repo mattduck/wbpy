@@ -1,0 +1,22 @@
+v2.0
+* Various components have been rewritten to simplify the API and make it easier
+  to extend without breaking backwards compatibility. This release /does/ break 
+  backwards compatibility:
+** Indicators() is now IndicatorAPI(), Climate() now ClimateAPI().
+** For both APIs, the main data methods return custom models, rather than
+   namedtuples. 
+** get_country_indicators() becomes get_dataset(), and returns one dataset
+   rather than multiple indicators.
+** Climate API is replaced with two methods, get_instrumental() and
+   get_modelled().
+** Various API variables have been rearranged, eg. climate API code definitions.
+* Supports python 2.6+ and python 3. 
+* Full tox test suite.
+* Can access the raw JSON API responses.
+* Fix handling of all non-ISO region codes (eg. A1) for the indicator API. 
+* The climate API has various simplifications, eg. removing GCM
+  and ensemble parameters. The as_dict() method takes a "sres" arg, so the
+  returned data only has one datum per year. 
+* Can return dictionary date keys as datetime objects rather than strings.
+* Moving forwards, dataset models can be extended to return new formats (eg.
+  pandas), without further breaking compatibility.
