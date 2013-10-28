@@ -1,3 +1,6 @@
+v2.0.1
+* Fix python 3 classifier syntax.
+
 v2.0
 * Various components have been rewritten to simplify the API and make it easier
   to extend without breaking backwards compatibility. This release /does/ break 
