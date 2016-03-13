@@ -426,14 +426,14 @@ class TestCountryCodes(TestIndicatorAPI):
     # ("gaza", "ps", "pse"),
 
     def test_alpha2_kosovo(self):
-        codes = ["kv"]
+        codes = ["xk"]
         data = self.api.get_countries(codes)
-        self.assertEqual(data["KV"]["name"], "Kosovo")
+        self.assertEqual(data["XK"]["name"], "Kosovo")
 
     def test_alpha3_kosovo(self):
-        codes = ["ksv"]
+        codes = ["xk"]
         data = self.api.get_countries(codes)
-        self.assertEqual(data["KV"]["name"], "Kosovo")
+        self.assertEqual(data["XK"]["name"], "Kosovo")
 
     def test_alpha2_arab_world(self):
         codes = ["1a"]
