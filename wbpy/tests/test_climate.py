@@ -245,7 +245,7 @@ class TestInstumentalFn(TestClimateAPI):
     def test_temp_type(self):
         locs = ["GBR"]
         dataset = self.api.get_instrumental("tas", "month", locs)
-        self.assertEqual(dataset.as_dict()["GB"][0], 3.5558505)
+        self.assertEqual(dataset.as_dict()["GB"][0], 3.548619)
 
     def test_basin_location(self):
         locs = [302, "301"]

@@ -19,7 +19,7 @@ class InstrumentalMonth(InstrumentalData):
 
     {
         "month": 0,
-        "data": 3.5558505
+        "data": 3.548619
     },
     {
         "month": 1,
