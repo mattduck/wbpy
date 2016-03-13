@@ -1,5 +1,18 @@
+**NOTE: This project is not under active development.**
 
-``(This file was built from an IPython Notebook. Download README.ipynb on Github to poke around.)``
+The tests are still passing at time of writing (2016/03/16), but if the APIs
+have changed much over the last couple of years then it's possible that there
+are some rough edges or missing features.
+
+I'm happy to look at any opened issues, but I'm no longer using the library, so
+I won't be finding issues myself. I'm also happy to accept pull requests, and to
+provide commit access (or to transfer ownership) if anybody wants to pick this
+up.
+
+----
+
+
+_(This file was built from an IPython Notebook. Download README.ipynb on Github to poke around.)_
 
 wbpy
 ====
@@ -58,12 +71,12 @@ Here's a small case where we already know what API codes to use:
 
     import wbpy
     from pprint import pprint
-    
+
     api = wbpy.IndicatorAPI()
-    
+
     iso_country_codes = ["GB", "FR", "JP"]
     total_population = "SP.POP.TOTL"
-    
+
     dataset = api.get_dataset(total_population, iso_country_codes, date="2010:2012")
     dataset
 
@@ -330,7 +343,7 @@ parameter. By default, the ``get_`` methods return all API results:
 
     all_regions = api.get_regions()
     all_sources = api.get_sources()
-    
+
     print "There are %d regions and %d sources." % (len(all_regions), len(all_sources))
 
 .. parsed-literal::
@@ -367,7 +380,7 @@ fields, set the ``search_full`` flag to ``True``:
 
     narrow_matches = api.get_topics(search="poverty")
     wide_matches = api.get_topics(search="poverty", search_full=True)
-    
+
     print "%d topic(s) match(es) 'poverty' in the title field, and %d topics match 'poverty' in all fields." % (len(narrow_matches), len(wide_matches))
 
 .. parsed-literal::
@@ -513,7 +526,7 @@ The available arguments and their definitions are accessible via the
 .. code:: python
 
     c_api = wbpy.ClimateAPI()
-    
+
     c_api.ARG_DEFINITIONS["instrumental_types"]
 
 
@@ -540,7 +553,7 @@ The available arguments and their definitions are accessible via the
 .. code:: python
 
     iso_and_basin_codes = ["AU", 1, 302]
-    
+
     dataset = c_api.get_instrumental(data_type="tas", interval="decade", locations=iso_and_basin_codes)
     dataset
 
@@ -879,10 +892,10 @@ web page as a string.
         # Basic function that doesn't do any caching
         import urllib2
         return urllib2.urlopen(url).read()
-    
+
     # Either pass it in on instantiation...
     ind_api = wbpy.IndicatorAPI(fetch=func)
-    
-    # ...or point api.fetch to it. 
+
+    # ...or point api.fetch to it.
     climate_api = wbpy.ClimateAPI()
     climate_api.fetch = func
