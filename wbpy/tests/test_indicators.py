@@ -286,9 +286,8 @@ class TestGetDatasetFn(TestIndicatorAPI):
 
     @data(True, "y")
     def test_gapfill_kwarg(self, gapfill):
-        # Using the API docs gapfill example
         countries = ["BR"]
-        results = self.api.get_dataset("DPANUSIFS", mrv=5,
+        results = self.api.get_dataset("SP.POP.GROW", countries, mrv=5,
             gapfill=gapfill)
         self.assertEqual(len(results.dates()), 5)
 
