@@ -4,7 +4,7 @@ import datetime
 import wbpy
 
 class TestData(object):
-    """ API response data for testing. """ 
+    """ API response data for testing. """
 
     def __init__(self):
         self.dataset = wbpy.IndicatorDataset(self.response, self.url, self.date)
@@ -137,7 +137,7 @@ class Yearly(TestData):
         "id": "2",
         "value": "World Development Indicators"
     },
-    "sourceNote": "Population, total refers to the total population.",
+    "sourceNote": "Total population is based on the de facto definition of population, which counts all residents regardless of legal status or citizenship--except for refugees not permanently settled in the country of asylum, who are generally considered part of the population of their country of origin. The values shown are midyear estimates.",
     "sourceOrganization": "(1) United Nations Population Division. World Population Prospects, (2) United Nations Statistical Division. Population and Vital Statistics Report (various years), (3) Census reports and other statistical publications from national statistical offices, (4) Eurostat: Demographic Statistics, (5) Secretariat of the Pacific Community: Statistics and Demography Programme, and (6) U.S. Census Bureau: International Database.",
     "topics": [
         {
@@ -154,7 +154,7 @@ class Yearly(TestData):
 
     def __init__(self):
         self.dataset = wbpy.IndicatorDataset(self.response, self.url, self.date)
-    
+
 
 class Monthly(TestData):
     url = "api.worldbank.org/en/countries/ind;chn/indicators/DPANUSSPF?MRV=7&frequency=M&format=json"
