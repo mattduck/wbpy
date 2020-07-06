@@ -8,13 +8,13 @@ except ImportError:
     from distutils.core import setup
 
 init_py = open("wbpy/__init__.py").read()
-METADATA = dict(re.findall("__([a-z]+)__ = \"([^\"]+)\"", init_py))
+METADATA = dict(re.findall(r"__([a-z]+)__ = \"([^\"]+)\"", init_py))
 
 kw = {}
 if sys.version_info >= (3,):
     kw["use_2to3"] = True
 
-setup(  
+setup(
     name=METADATA["name"],
     version=METADATA["version"],
     license=METADATA["license"],
@@ -30,12 +30,12 @@ setup(
     tests_require=["tox"],
     classifiers=[
         'Development Status :: 4 - Beta',
-         'Intended Audience :: Developers', 
-         'Intended Audience :: Science/Research', 
+         'Intended Audience :: Developers',
+         'Intended Audience :: Science/Research',
          'License :: OSI Approved :: MIT License',
-         'Operating System :: OS Independent', 
-         'Programming Language :: Python', 
-         'Programming Language :: Python :: 3', 
-         'Topic :: Scientific/Engineering', 
+         'Operating System :: OS Independent',
+         'Programming Language :: Python',
+         'Programming Language :: Python :: 3',
+         'Topic :: Scientific/Engineering',
         ],
     **kw)

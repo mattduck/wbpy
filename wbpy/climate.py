@@ -149,7 +149,7 @@ class ModelledDataset(ClimateDataset):
         dates = set()
         all_urls = [call["url"] for call in self.api_calls]
         for url in all_urls:
-            start, end = re.findall("\d+/\d+", url)[0].split("/")
+            start, end = re.findall(r"\d+/\d+", url)[0].split("/")
             if use_datetime:
                 start = utils.worldbank_date_to_datetime(start)
                 end = utils.worldbank_date_to_datetime(end)

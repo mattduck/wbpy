@@ -217,12 +217,13 @@ class IndicatorAPI(object):
             # Compile a list of codes that are on the main website (and have
             # better data coverage), and filter out any results that cannot be
             # found on the site.
-            page = self.fetch("http://data.worldbank.org/indicator/all")
-            ind_codes = re.compile("(?<=http://data.worldbank.org/indicator/)"
-                                   "[A-Za-z0-9\.]+(?=\">)")
+            page = self.fetch("https://data.worldbank.org/indicator?tab=all")
+            ind_codes = re.compile(r"(?<=/indicator/)[^?]+")
             common_matches = {}
             code_matches = set([code.lower() for code in
                                 ind_codes.findall(page)])
+            assert code_matches, "That common_matches search algorithm isn't fatally broken."
+
             # If key matches common code, include in results.
             for k, v in results.items():
                 low_k = k.lower()
@@ -449,7 +450,7 @@ class IndicatorAPI(object):
 
         def natural_keys(item):
             key = item[0]
-            return [try_int(s) for s in re.split("(\d+)", key)]
+            return [try_int(s) for s in re.split(r"(\d+)", key)]
 
         if search:
             # Either search everything, or just the main "name" value of the
@@ -558,6 +559,7 @@ class IndicatorAPI(object):
         query_string = urlencode(sorted_kwargs)
 
         new_url = "".join([self.BASE_URL, rest_url, query_string])
+        print(new_url)
         return new_url
 
     def _get_api_response_as_json(self, url):

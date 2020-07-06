@@ -9,7 +9,6 @@ except ImportError:
     import unittest
 
 import mock
-from six.moves.urllib import request
 
 from wbpy import utils
 
@@ -19,7 +18,7 @@ class TestFetchFn(unittest.TestCase):
     def setUp(self):
         # The response contains non-ascii characters, so encoding can be tested
         # against different python versions.
-        self.url = "http://api.worldbank.org/topic?format=json&"
+        self.url = "http://api.worldbank.org/v2/topic?format=json&"
         "mrv=1&per_page=10000"
 
     def tearDown(self):
@@ -39,7 +38,7 @@ class TestFetchFn(unittest.TestCase):
         utils.fetch(self.url, check_cache=False, cache_response=True)
 
         # Make sure reading from file, rather than calling url
-        urlopen_fn = mock.patch(request.urlopen).start()
+        urlopen_fn = mock.patch("six.moves.urllib.request.urlopen").start()
         res = utils.fetch(self.url, check_cache=True)
         self.assertFalse(urlopen_fn.called)
 
