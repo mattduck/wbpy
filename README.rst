@@ -890,8 +890,8 @@ web page as a string.
 
     def func(url):
         # Basic function that doesn't do any caching
-        import urllib2
-        return urllib2.urlopen(url).read()
+        from six.moves.urllib import request
+        return request.urlopen(url).read()
 
     # Either pass it in on instantiation...
     ind_api = wbpy.IndicatorAPI(fetch=func)

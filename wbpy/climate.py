@@ -6,6 +6,7 @@ import json
 import itertools
 
 import pycountry
+import six
 
 from . import utils
 
@@ -19,7 +20,7 @@ class ClimateDataset(object):
             responses can form one dataset.
 
         :param data_type:
-            eg. ``pr``, ``tas``, ``tmin_means`` 
+            eg. ``pr``, ``tas``, ``tmin_means``
 
         :param data_interval:
             eg. ``mavg``, ``decade``
@@ -212,10 +213,10 @@ class ModelledDataset(ClimateDataset):
 
 class ClimateAPI(object):
 
-    """Request data from the World Bank Climate API. 
-    
+    """Request data from the World Bank Climate API.
+
     You can override the default tempfile cache by passing a function
-    ``fetch``, which requests a URL and returns the response as a string. 
+    ``fetch``, which requests a URL and returns the response as a string.
     """
 
     _gcm = dict(
@@ -302,7 +303,7 @@ class ClimateAPI(object):
         aanom="annualanom",
         aavg="annualavg",
         )
-    for _k, _d_key in _shorthand_codes.iteritems():
+    for _k, _d_key in _shorthand_codes.items():
         for _d in [_instrumental_types, _modelled_types,
             _instrumental_intervals, _modelled_intervals]:
             if _d_key in _d:

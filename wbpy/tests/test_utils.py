@@ -9,6 +9,7 @@ except ImportError:
     import unittest
 
 import mock
+from six.moves.urllib import request
 
 from wbpy import utils
 
@@ -38,12 +39,7 @@ class TestFetchFn(unittest.TestCase):
         utils.fetch(self.url, check_cache=False, cache_response=True)
 
         # Make sure reading from file, rather than calling url
-        if sys.version_info > (3,):
-            urlopen = "urllib.request.urlopen"
-        else:
-            urlopen = "urllib2.urlopen"
-
-        urlopen_fn = mock.patch(urlopen).start()
+        urlopen_fn = mock.patch(request.urlopen).start()
         res = utils.fetch(self.url, check_cache=True)
         self.assertFalse(urlopen_fn.called)
 

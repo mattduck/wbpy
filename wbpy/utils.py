@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import tempfile
-import urllib2
+from six.moves.urllib import request
 import time
 import logging
 import datetime
@@ -56,7 +56,7 @@ def fetch(url, check_cache=True, cache_response=True):
             logger.debug("URL not found in cache....")
 
     logger.debug("Getting web response...")
-    response = urllib2.urlopen(url).read()
+    response = request.urlopen(url).read()
 
     # py3 returns bytestring
     if sys.version_info >= (3,):
