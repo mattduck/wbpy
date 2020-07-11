@@ -18,7 +18,7 @@ class TestFetchFn(unittest.TestCase):
     def setUp(self):
         # The response contains non-ascii characters, so encoding can be tested
         # against different python versions.
-        self.url = "http://api.worldbank.org/topic?format=json&"
+        self.url = "http://api.worldbank.org/v2/topic?format=json&"
         "mrv=1&per_page=10000"
 
     def tearDown(self):
@@ -38,12 +38,7 @@ class TestFetchFn(unittest.TestCase):
         utils.fetch(self.url, check_cache=False, cache_response=True)
 
         # Make sure reading from file, rather than calling url
-        if sys.version_info > (3,):
-            urlopen = "urllib.request.urlopen"
-        else:
-            urlopen = "urllib2.urlopen"
-
-        urlopen_fn = mock.patch(urlopen).start()
+        urlopen_fn = mock.patch("six.moves.urllib.request.urlopen").start()
         res = utils.fetch(self.url, check_cache=True)
         self.assertFalse(urlopen_fn.called)
 

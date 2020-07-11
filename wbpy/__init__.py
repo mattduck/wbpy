@@ -1,5 +1,5 @@
-from indicators import IndicatorAPI, IndicatorDataset
-from climate import ClimateAPI, InstrumentalDataset, ModelledDataset
+from wbpy.indicators import IndicatorAPI, IndicatorDataset
+from wbpy.climate import ClimateAPI, InstrumentalDataset, ModelledDataset
 
 __name__ = "wbpy"
 __version__ = "2.0.1"
@@ -13,4 +13,4 @@ __all__ = [
     ClimateAPI,
     InstrumentalDataset,
     ModelledDataset,
-    ]
+]

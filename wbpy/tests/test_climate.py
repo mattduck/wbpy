@@ -10,14 +10,14 @@ except ImportError:
 from ddt import ddt, data
 
 import wbpy
-from climate_data import (
+from wbpy.tests.climate_data import (
     InstrumentalMonth,
     InstrumentalYear,
     InstrumentalDecade,
     ModelledVarMAVG,
     ModelledVarAANOM,
     ModelledStat,
-    )
+)
 
 @ddt
 class TestClimateDataBasicAttrs(unittest.TestCase):
@@ -76,11 +76,11 @@ class TestInstrumentalModelBasicAttrs(unittest.TestCase):
     @data(InstrumentalMonth(), InstrumentalYear(), InstrumentalDecade())
     def test_api_call_date_attr(self, data):
         self.assertEqual(data.dataset.api_call_date, data.date)
-   
+
     @data(InstrumentalMonth(), InstrumentalYear(), InstrumentalDecade())
     def test_dates_attr(self, data):
         self.assertIn("1901", data.dataset.dates)
-     
+
 
 @ddt
 class TestInstrumentalModelDictFn(unittest.TestCase):
@@ -178,17 +178,17 @@ class TestModelledModelDatesFn(unittest.TestCase):
 
 @ddt
 class TestModelledModelDictFn(unittest.TestCase):
-    
+
     @data(ModelledVarMAVG(), ModelledVarAANOM())
     def test_gcm_key(self, data):
         self.assertIn("ingv_echam4", data.dataset.as_dict())
-        
+
     def test_gcm_key_ensemble(self):
         data = ModelledStat()
         self.assertIn("ensemble_90", data.dataset.as_dict())
-        
-    @data([ModelledVarMAVG(), ("BR",)], 
-        [ModelledVarAANOM(), ("JP",)], 
+
+    @data([ModelledVarMAVG(), ("BR",)],
+        [ModelledVarAANOM(), ("JP",)],
         [ModelledStat(), ("AU", "NZ")],
         )
     def test_region_key(self, foo):
@@ -270,8 +270,8 @@ class TestModelledFn(TestClimateAPI):
         locs = ["AF"]
         dataset = self.api.get_modelled("tas", "mavg", locs)
         self.assertIn("tas", dataset.data_type)
-   
-    @data("ppt_days", "tmin_means", "ppt_days90th") 
+
+    @data("ppt_days", "tmin_means", "ppt_days90th")
     def test_derived_statistic_type(self, stat):
         locs = ["AF", 303]
         dataset = self.api.get_modelled(stat, "mavg", locs)
@@ -296,7 +296,7 @@ class TestModelledFn(TestClimateAPI):
         locs = ["nzl"]
         dataset = self.api.get_modelled("tmin_means", "mavg", locs)
         res = dataset.as_dict(sres="b1")
-        self.assertEqual(res["ensemble_90"]["NZ"]["2065"][11], 
+        self.assertEqual(res["ensemble_90"]["NZ"]["2065"][11],
             14.541015999650355)
 
     def test_bad_request_raises_exc(self):
@@ -312,7 +312,7 @@ class TestModelledFn(TestClimateAPI):
         regions = [resp["region"][0] for resp in dataset.api_calls]
         self.assertIn("GB", regions)
         self.assertIn("302", regions)
-        
+
 
 class TestLocationCodes(TestClimateAPI):
     def test_alpha2_codes_work_as_location_arg(self):

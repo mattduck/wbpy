@@ -2,7 +2,7 @@
 import re
 import datetime
 import pprint
-import urllib
+from six.moves.urllib.parse import urlencode
 try:
     import simplejson as json
 except ImportError:
@@ -122,13 +122,13 @@ class IndicatorDataset(object):
 
 class IndicatorAPI(object):
 
-    """Request data from the World Bank Indicators API. 
-    
+    """Request data from the World Bank Indicators API.
+
     You can override the default tempfile cache by passing a function
-    ``fetch``, which requests a URL and returns the response as a string. 
+    ``fetch``, which requests a URL and returns the response as a string.
     """
 
-    BASE_URL = "http://api.worldbank.org/"
+    BASE_URL = "http://api.worldbank.org/v2/"
 
     # The API uses some non-ISO 2-digit and 3-digit codes. Make them available.
     NON_STANDARD_REGIONS = utils.NON_STANDARD_REGIONS
@@ -217,12 +217,13 @@ class IndicatorAPI(object):
             # Compile a list of codes that are on the main website (and have
             # better data coverage), and filter out any results that cannot be
             # found on the site.
-            page = self.fetch("http://data.worldbank.org/indicator/all")
-            ind_codes = re.compile("(?<=http://data.worldbank.org/indicator/)"
-                                   "[A-Za-z0-9\.]+(?=\">)")
+            page = self.fetch("https://data.worldbank.org/indicator?tab=all")
+            ind_codes = re.compile(r"(?<=/indicator/)[^?]+")
             common_matches = {}
             code_matches = set([code.lower() for code in
                                 ind_codes.findall(page)])
+            assert code_matches, "That common_matches search algorithm isn't fatally broken."
+
             # If key matches common code, include in results.
             for k, v in results.items():
                 low_k = k.lower()
@@ -237,7 +238,7 @@ class IndicatorAPI(object):
     def get_countries(self, country_codes=None, search=None,
             search_full=False, **kwargs):
         """Request country metadata.
-        
+
         eg. ISO code, coordinates, capital, income level, etc.
 
         :param country_codes:
@@ -433,7 +434,7 @@ class IndicatorAPI(object):
         :param search:
             Regexp string to filter out non-matching results.
             By default, this searches the main name of the entity.
-            
+
         :param search_key:
             A second-level KEY in your dict, eg. ``{foo: {KEY: val}}``.
             If given, will only search the value corresponding to the key.
@@ -449,7 +450,7 @@ class IndicatorAPI(object):
 
         def natural_keys(item):
             key = item[0]
-            return [try_int(s) for s in re.split("(\d+)", key)]
+            return [try_int(s) for s in re.split(r"(\d+)", key)]
 
         if search:
             # Either search everything, or just the main "name" value of the
@@ -465,7 +466,7 @@ class IndicatorAPI(object):
                 main_value = v.get("name", v.get("value", v))
             else:
                 main_value = v
-            print u"{0:30} {1}".format(k, main_value)
+            print(u"{0:30} {1}".format(k, main_value))
 
     def search_results(self, regexp, results, key=None):
         """For a given dict of ``get_`` results, filter out all keys that do
@@ -555,9 +556,10 @@ class IndicatorAPI(object):
         # always generate the same URL (for caching purposes), so need to
         # convert to a sorted list before passing to urlencode().
         sorted_kwargs = sorted([(k, v) for k, v in kwargs.items()])
-        query_string = urllib.urlencode(sorted_kwargs)
+        query_string = urlencode(sorted_kwargs)
 
         new_url = "".join([self.BASE_URL, rest_url, query_string])
+        print(new_url)
         return new_url
 
     def _get_api_response_as_json(self, url):
