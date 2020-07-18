@@ -1,5 +1,3 @@
-``This file was built from an IPython Notebook. Download README.ipynb on Github to poke around.``
-
 wbpy
 ====
 
@@ -43,7 +41,7 @@ Installation
 Contributors
 ------------
 
--  [@bcipolli](https://github.com/bcipolli) upgraded wbpy to support
+-  `@bcipolli <https://github.com/bcipolli>`__ upgraded wbpy to support
    Python 3 and v2 of the world bank API.
 
 Development and maintenance
@@ -52,7 +50,7 @@ Development and maintenance
 This project was unmaintained for a couple of years, although was
 updated in July 2020 to support Python 3 and to use the v2 endpoint of
 the API, as v1 has not been supported for a while (thanks
-[@bcipolli](https://github.com/bcipolli)!). Although I’m not actively
+`@bcipolli <https://github.com/bcipolli>`__). Although I’m not actively
 adding new features or looking for issues, I’m happy to accept
 contributions, and to provide commit access if anybody wants to work on
 the project.
@@ -65,16 +63,16 @@ Basic use
 
 Here’s a small case where we already know what API codes to use:
 
-.. code:: ipython3
+.. code:: python
 
     import wbpy
     from pprint import pprint
-    
+
     api = wbpy.IndicatorAPI()
-    
+
     iso_country_codes = ["GB", "FR", "JP"]
     total_population = "SP.POP.TOTL"
-    
+
     dataset = api.get_dataset(total_population, iso_country_codes, date="2010:2012")
     dataset
 
@@ -96,7 +94,7 @@ The ``IndicatorDataset`` instance contains the direct API response and
 various metadata. Use ``dataset.as_dict()`` to return a tidy dictionary
 of the data:
 
-.. code:: ipython3
+.. code:: python
 
     dataset.as_dict()
 
@@ -113,7 +111,7 @@ of the data:
 
 Some examples of the metadata available:
 
-.. code:: ipython3
+.. code:: python
 
     dataset.api_url
 
@@ -126,7 +124,7 @@ Some examples of the metadata available:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     dataset.indicator_name
 
@@ -139,7 +137,7 @@ Some examples of the metadata available:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     dataset.indicator_topics
 
@@ -157,7 +155,7 @@ Some examples of the metadata available:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     dataset.countries
 
@@ -173,7 +171,7 @@ Some examples of the metadata available:
 If you want to create your own data structures, you can process the raw
 API response:
 
-.. code:: ipython3
+.. code:: python
 
     dataset.api_response
 
@@ -268,7 +266,7 @@ Searching for indicators
 
 We don’t always know what indicators we want to use, so we can search:
 
-.. code:: ipython3
+.. code:: python
 
     population_indicators = api.get_indicators(search="population")
     len(population_indicators)
@@ -295,7 +293,7 @@ coverage at http://data.worldbank.org/indicator, and you can pass
 ``common_only=True`` to throw away all indicators that aren’t included
 on that page:
 
-.. code:: ipython3
+.. code:: python
 
     population_indicators = api.get_indicators(search="population", common_only=True)
     print("There are now only %d indicators to browse." % len(population_indicators))
@@ -312,7 +310,7 @@ filter some more. The API query string parameters are directly mapped to
 kwargs for each method. For the ``get_indicators`` method, this means we
 can filter by topic or source:
 
-.. code:: ipython3
+.. code:: python
 
     health_topic_id = 8
     health_indicators = api.get_indicators(search="population", common_only=True, topic=health_topic_id)
@@ -327,7 +325,7 @@ can filter by topic or source:
 
 Each indicator has a variety of metadata:
 
-.. code:: ipython3
+.. code:: python
 
     pprint(list(health_indicators.items())[2])
 
@@ -349,7 +347,7 @@ That data might be useful, but it’s not very friendly if you just want
 to grab some API codes. If that’s what you want, you can pass the
 results to the ``print_codes`` method:
 
-.. code:: ipython3
+.. code:: python
 
     api.print_codes(api.get_indicators(search="tuberculosis"))
 
@@ -375,7 +373,7 @@ There are ``get_`` functions matching all API endpoints (countries,
 regions, sources, etc.), and the ``search`` parameter and
 ``print_codes`` method can be used on any of them. For example:
 
-.. code:: ipython3
+.. code:: python
 
     countries = api.get_countries(search="united")
     api.print_codes(countries)
@@ -395,11 +393,11 @@ More searching
 If you’re not sure what to search for, just leave out the ``search``
 parameter. By default, the ``get_`` methods return all API results:
 
-.. code:: ipython3
+.. code:: python
 
     all_regions = api.get_regions()
     all_sources = api.get_sources()
-    
+
     print("There are %d regions and %d sources." % (len(all_regions), len(all_sources)))
 
 
@@ -413,7 +411,7 @@ parameter. By default, the ``get_`` methods return all API results:
 The ``search`` parameter actually just calls a ``search_results``
 method, which you can use directly:
 
-.. code:: ipython3
+.. code:: python
 
     pprint(api.search_results("debt", all_sources))
 
@@ -466,11 +464,11 @@ By default, the ``search`` parameter only searches the title of an
 entity (eg. a country name, or source title). If you want to search all
 fields, set the ``search_full`` flag to ``True``:
 
-.. code:: ipython3
+.. code:: python
 
     narrow_matches = api.get_topics(search="poverty")
     wide_matches = api.get_topics(search="poverty", search_full=True)
-    
+
     print("%d topic(s) match(es) 'poverty' in the title field, and %d topics match 'poverty' in all fields." % (len(narrow_matches), len(wide_matches)))
 
 
@@ -534,7 +532,7 @@ are also supported. You can access them via the ``NON_STANDARD_REGIONS``
 attribute, which returns a dictionary of codes and region info. Again,
 to see the codes, pass the dictionary to the ``print_codes`` method:
 
-.. code:: ipython3
+.. code:: python
 
     api.print_codes(api.NON_STANDARD_REGIONS)
 
@@ -613,10 +611,10 @@ Instrumental data
 The available arguments and their definitions are accessible via the
 ``ARG_DEFINITIONS`` attribute:
 
-.. code:: ipython3
+.. code:: python
 
     c_api = wbpy.ClimateAPI()
-    
+
     c_api.ARG_DEFINITIONS["instrumental_types"]
 
 
@@ -629,7 +627,7 @@ The available arguments and their definitions are accessible via the
 
 
 
-.. code:: ipython3
+.. code:: python
 
     c_api.ARG_DEFINITIONS["instrumental_intervals"]
 
@@ -642,10 +640,10 @@ The available arguments and their definitions are accessible via the
 
 
 
-.. code:: ipython3
+.. code:: python
 
     iso_and_basin_codes = ["AU", 1, 302]
-    
+
     dataset = c_api.get_instrumental(data_type="tas", interval="decade", locations=iso_and_basin_codes)
     dataset
 
@@ -661,7 +659,7 @@ The available arguments and their definitions are accessible via the
 The ``InstrumentalDataset`` instance stores the API responses, various
 metadata and methods for accessing the data:
 
-.. code:: ipython3
+.. code:: python
 
     pprint(dataset.as_dict())
 
@@ -692,7 +690,7 @@ metadata and methods for accessing the data:
             '2010': 21.351604}}
 
 
-.. code:: ipython3
+.. code:: python
 
     dataset.data_type
 
@@ -711,7 +709,7 @@ Modelled data
 ``get_modelled`` returns data derived from Global Glimate Models. There
 are various possible data types:
 
-.. code:: ipython3
+.. code:: python
 
     c_api.ARG_DEFINITIONS["modelled_types"]
 
@@ -738,7 +736,7 @@ are various possible data types:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     c_api.ARG_DEFINITIONS["modelled_intervals"]
 
@@ -756,7 +754,7 @@ are various possible data types:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     locations = ["US"]
     modelled_dataset = c_api.get_modelled("pr", "aavg", locations)
@@ -775,7 +773,7 @@ The ``as_dict()`` method for ``ModelledDataset`` takes a kwarg to
 specify the SRES used for future values. The API uses the A2 and B1
 scenarios:
 
-.. code:: ipython3
+.. code:: python
 
     pprint(modelled_dataset.as_dict(sres="a2"))
 
@@ -930,7 +928,7 @@ scenarios:
 
 Again, various metadata is available, for example:
 
-.. code:: ipython3
+.. code:: python
 
     modelled_dataset.gcms
 
@@ -959,7 +957,7 @@ Again, various metadata is available, for example:
 
 
 
-.. code:: ipython3
+.. code:: python
 
     modelled_dataset.dates()
 
@@ -986,16 +984,16 @@ The default cache function uses system temporary files. You can specify
 your own. The function has to take a url, and return the corresponding
 web page as a string.
 
-.. code:: ipython3
+.. code:: python
 
     def func(url):
         # Basic function that doesn't do any caching
         from six.moves.urllib import request
         return request.urlopen(url).read()
-    
+
     # Either pass it in on instantiation...
     ind_api = wbpy.IndicatorAPI(fetch=func)
-    
-    # ...or point api.fetch to it. 
+
+    # ...or point api.fetch to it.
     climate_api = wbpy.ClimateAPI()
     climate_api.fetch = func

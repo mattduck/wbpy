@@ -92,20 +92,36 @@ def convert_country_code(code, return_alpha):
     try:
         # Try to get code from ISO 1366 standard
         code = code.upper()
+        country = None
         if len(code) == 2:
-            country = pycountry.countries.get(alpha2=code)
+            try:
+                country = pycountry.countries.get(alpha_2=code)
+            except KeyError:
+                country = pycountry.countries.get(alpha2=code)
         elif len(code) == 3:
-            country = pycountry.countries.get(alpha3=code)
+            try:
+                country = pycountry.countries.get(alpha_3=code)
+            except KeyError:
+                country = pycountry.countries.get(alpha3=code)
         else:
             raise ValueError("`code` is not a valid alpha-2 or alpha-3 code")
-        return getattr(country, return_alpha)
+        if country is None:
+            # Ugly way to get to the except branch below. Pycountry will raise
+            # KeyError automatically in versions < 18.12.8
+            raise KeyError
+        try:
+            return getattr(country, return_alpha)
+        except AttributeError:
+            if "_" not in return_alpha:
+                return_alpha = return_alpha.replace("2", "_2").replace("3", "_3")
+                return getattr(country, return_alpha)
 
     except (KeyError, ValueError):
         # Try the world bank non-standard codes
-        if return_alpha == "alpha2" and code in NON_STANDARD_REGIONS:
+        if "2" in return_alpha and code in NON_STANDARD_REGIONS:
             return NON_STANDARD_REGIONS[code]["id"]
 
-        elif return_alpha == "alpha3":
+        elif "3" in return_alpha:
             for alpha2, vals in NON_STANDARD_REGIONS.items():
                 if vals["id"] == code:
                     return alpha2

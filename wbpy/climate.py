@@ -38,7 +38,16 @@ class ClimateDataset(object):
             region = str(resp["url"].split("/")[-1])
             try:
                 code = utils.convert_country_code(region.upper(), "alpha2")
-                val = pycountry.countries.get(alpha2=code).name
+                # This is a bit ugly. It's because of two breaking changes in
+                # old pycountry versions - one to raise a KeyError instead of
+                # returning None, and one to replace alpha2 with alpha_2.
+                try:
+                    country = pycountry.countries.get(alpha_2=code)
+                except KeyError:
+                    country = pycountry.countries.get(alpha2=code)
+                if country is None:
+                    raise KeyError
+                val = country.name
             except KeyError:  # If not country code, assume it's a basin
                 code = region
                 val = "http://data.worldbank.org/sites/default/files"

@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "wbpy"
+version = "3.0.0"
+description = "Wrapper interface for the World Bank Indicators and Climate APIs"
+authors = ["Matt Duck"]
+repository = "https://github.com/mattduck/wbpy"
+include = ["wbpy/*.json"]
+license = "MIT"
+keywords = ["wbpy", "world bank", "api", "climate"]
+readme = "README.rst"
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
+    'Topic :: Scientific/Engineering'
+]
+
+[tool.poetry.dependencies]
+python = ">=3.6"
+six = ">=1.15.0"
+pycountry = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.4.3"
+tox = "^3.16.1"
+ddt = "^1.4.1"
+mock = "^4.0.2"
+
+[build-system]
+requires = ["poetry_core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
