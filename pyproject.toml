@@ -4,7 +4,7 @@ version = "3.0.0"
 description = "Wrapper interface for the World Bank Indicators and Climate APIs"
 authors = ["Matt Duck"]
 repository = "https://github.com/mattduck/wbpy"
-include = ["wbpy/*.json"]
+include = ["wbpy/non_ISO_region_codes.json"]
 license = "MIT"
 keywords = ["wbpy", "world bank", "api", "climate"]
 readme = "README.rst"
@@ -20,6 +20,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
+# TODO: put python2 back here if I can confirm it works.
 python = ">=3.6"
 six = ">=1.15.0"
 pycountry = "*"
@@ -29,6 +30,9 @@ pytest = "^5.4.3"
 tox = "^3.16.1"
 ddt = "^1.4.1"
 mock = "^4.0.2"
+
+[tool.poetry.extras]
+test = ["pytest"]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
